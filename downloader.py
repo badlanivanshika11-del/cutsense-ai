@@ -8,21 +8,20 @@ except AttributeError:
     pass
 
 def download_video(url: str, output_dir: str = "downloads") -> dict:
-    """Downloads a YouTube video or Instagram Reel with robust 403 fallbacks."""
+    """Downloads a YouTube video or Instagram Reel with universal format selection."""
     os.makedirs(output_dir, exist_ok=True)
     is_instagram = "instagram.com" in url.lower() or "instagr.am" in url.lower()
     platform_name = "Instagram Reel" if is_instagram else "YouTube Video"
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
-    # List of fallback configuration strategies to try against 403 Forbidden errors
+    # Universal format options without restrictive format filters
     options_list = [
         {
-            'format': 'best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -30,26 +29,24 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'http_headers': headers,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['mweb', 'android'],
+                    'player_client': ['android', 'web', 'mweb'],
                 }
             },
             'quiet': True,
         },
         {
-            'format': 'mp4/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
             'geo_bypass': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['tv', 'web'],
+                    'player_client': ['ios', 'tv'],
                 }
             },
             'quiet': True,
         },
         {
-            'format': 'worst/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -80,7 +77,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             last_error = e
             continue
 
-    raise Exception(f"Unable to download video stream after 3 fallback attempts: {str(last_error)}")
+    raise Exception(f"Unable to download video stream after 3 attempts: {str(last_error)}")
 
 # Alias for backwards compatibility
 download_youtube_video = download_video
