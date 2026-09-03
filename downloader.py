@@ -8,7 +8,7 @@ except AttributeError:
     pass
 
 def download_video(url: str, output_dir: str = "downloads") -> dict:
-    """Downloads a YouTube video or Instagram Reel with universal format selection."""
+    """Downloads a YouTube video or Instagram Reel as a single pre-merged stream."""
     os.makedirs(output_dir, exist_ok=True)
     is_instagram = "instagram.com" in url.lower() or "instagr.am" in url.lower()
     platform_name = "Instagram Reel" if is_instagram else "YouTube Video"
@@ -19,9 +19,10 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
-    # Universal format options without restrictive format filters
+    # Format 'b/best' requests single pre-merged video+audio files to prevent ffmpeg dependency crashes
     options_list = [
         {
+            'format': 'b/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -35,6 +36,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'quiet': True,
         },
         {
+            'format': 'best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -47,6 +49,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'quiet': True,
         },
         {
+            'format': 'worst/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
