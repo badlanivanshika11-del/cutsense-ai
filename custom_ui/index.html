@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CutSense AI Studio - Custom UI Design</title>
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand-logo">
+                <span class="logo-icon">🎬</span>
+                <span class="brand-name">CutSense<span class="highlight">.AI</span></span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link active">Studio Dashboard</a>
+                <a href="#" class="nav-link">Video History</a>
+                <a href="#" class="nav-link">API Settings</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. MAIN APP CONTAINER -->
+    <main class="main-container">
+
+        <!-- HERO SECTION -->
+        <header class="hero-section">
+            <h1 class="hero-title">Custom AI Video Editor Studio</h1>
+            <p class="hero-subtitle">Deconstruct cuts, camera transitions, and retention drivers for YouTube Videos & Instagram Reels.</p>
+            
+            <!-- INPUT CARD -->
+            <div class="input-card">
+                <div class="input-wrapper">
+                    <input type="text" id="videoUrlInput" class="custom-input" placeholder="Paste YouTube Video or Instagram Reel URL...">
+                    <button id="analyzeBtn" class="primary-btn">
+                        <span>🚀 Deconstruct Edits</span>
+                    </button>
+                </div>
+                <div class="api-key-row">
+                    <label for="apiKeyInput">Gemini API Key:</label>
+                    <input type="password" id="apiKeyInput" class="small-input" placeholder="Enter your Gemini API key...">
+                </div>
+            </div>
+        </header>
+
+        <!-- PREVIEW & ANALYTICS GRID -->
+        <section class="results-grid" id="resultsSection">
+            
+            <!-- LEFT COLUMN: VIDEO PREVIEW & EXPORT -->
+            <div class="left-column">
+                <!-- VIDEO CARD -->
+                <div class="ui-card">
+                    <div class="card-header">
+                        <span class="card-icon">📽️</span>
+                        <h3>Video Media Preview</h3>
+                    </div>
+                    <div class="media-container" id="mediaContainer">
+                        <div class="placeholder-media">
+                            <span>Enter a URL above to load media</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPORT CARD -->
+                <div class="ui-card">
+                    <div class="card-header">
+                        <span class="card-icon">📥</span>
+                        <h3>Export Client Reports</h3>
+                    </div>
+                    <div class="btn-group">
+                        <button class="secondary-btn" id="downloadPdfBtn">📄 Download PDF</button>
+                        <button class="secondary-btn" id="downloadCsvBtn">📊 Download CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: ANALYTICS CARDS -->
+            <div class="right-column">
+                
+                <!-- PACING METER CARD -->
+                <div class="ui-card">
+                    <div class="card-header">
+                        <span class="card-icon">📊</span>
+                        <h3>Editing Pacing & Density</h3>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric-box">
+                            <span class="metric-label">Overall Speed</span>
+                            <span class="badge badge-purple" id="pacingSpeed">Fast-paced</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cuts / Minute</span>
+                            <span class="badge badge-blue" id="cutsPerMin">24 cuts/min</span>
+                        </div>
+                    </div>
+                    <!-- PACING METER BAR -->
+                    <div class="pacing-meter">
+                        <div class="meter-fill" id="meterFill" style="width: 75%;"></div>
+                    </div>
+                    <div class="meter-labels">
+                        <span>Slow</span>
+                        <span>Moderate</span>
+                        <span>Fast-Paced</span>
+                    </div>
+                </div>
+
+                <!-- HOOK CARD -->
+                <div class="ui-card">
+                    <div class="card-header">
+                        <span class="card-icon">🪝</span>
+                        <h3>First 15-Second Retention Hook</h3>
+                    </div>
+                    <p class="card-text" id="hookEvaluationText">
+                        Extremely strong 15-second hook. The creator immediately highlights the common struggle of video editors trying to monetize their skill.
+                    </p>
+                </div>
+
+                <!-- THUMBNAIL CARD -->
+                <div class="ui-card">
+                    <div class="card-header">
+                        <span class="card-icon">🖼️</span>
+                        <h3>Thumbnail & Visual Clickability</h3>
+                    </div>
+                    <p class="card-text" id="thumbnailText">
+                        High contrast, bold title typography, expressive facial expression, and visible income figures ($/₹) create strong curiosity.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TIMELINE SECTION -->
+        <section class="timeline-section">
+            <div class="ui-card">
+                <div class="card-header">
+                    <span class="card-icon">⏱️</span>
+                    <h3>Timestamped Editing & Transition Timeline</h3>
+                </div>
+                
+                <div class="timeline-list" id="timelineList">
+                    <!-- TIMELINE ITEM EXAMPLE -->
+                    <div class="timeline-item">
+                        <div class="timeline-top">
+                            <span class="time-code">⏱️ 00:01 - 00:03</span>
+                            <span class="tag tag-cyan">Visual Effect Overlay</span>
+                        </div>
+                        <p class="timeline-desc"><strong>Technique:</strong> Futuristic HUD/timeline visual effect overlaid onto editor's face and hands typing.</p>
+                        <p class="timeline-impact">💡 <em>Retention Impact:</em> Hooks the audience visually with a stylish representation of video editing.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-top">
+                            <span class="time-code">⏱️ 00:39 - 00:40</span>
+                            <span class="tag tag-purple">Transition</span>
+                        </div>
+                        <p class="timeline-desc"><strong>Technique:</strong> Top-down overhead hand-swipe transition introducing Style-5 eLearning editing.</p>
+                        <p class="timeline-impact">💡 <em>Retention Impact:</em> Provides a clean, satisfying chapter break between video sections.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>© 2026 CutSense AI Studio • Custom Frontend UI • Powered by Gemini 3.6 Flash</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

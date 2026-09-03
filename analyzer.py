@@ -26,7 +26,7 @@ class VideoAnalysisReport(BaseModel):
     timeline: list[EditingSegment]
 
 def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API and analyzes editing & retention techniques."""
+    """Uploads video to Gemini API with automatic retry and model fallback for high demand spikes."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -50,13 +50,28 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
     3. Timestamped breakdown of major visual transitions and key edit moments.
     """
     
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=[uploaded_file, prompt],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=VideoAnalysisReport,
-        )
-    )
+    # Fallback models in case of 503 high demand spikes
+    models_to_try = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
+    last_error = None
     
-    return VideoAnalysisReport.model_validate_json(response.text)
+    for model_name in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[uploaded_file, prompt],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=VideoAnalysisReport,
+                    )
+                )
+                return VideoAnalysisReport.model_validate_json(response.text)
+            except Exception as e:
+                last_error = e
+                if "503" in str(e) or "UNAVAILABLE" in str(e):
+                    time.sleep(2)
+                    continue
+                else:
+                    break
+
+    raise Exception(f"Gemini API Error after retries: {str(last_error)}")
