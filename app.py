@@ -124,15 +124,16 @@ cyberpunk_css = """
         color: white !important;
         font-weight: 700;
         text-decoration: none;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        transition: transform 0.2s;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .learn-btn:hover {
         transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.7);
     }
 
     .time-badge {
@@ -146,7 +147,17 @@ cyberpunk_css = """
         font-size: 0.9rem;
     }
 
-    /* Pacing Meter Bar */
+    .virality-score {
+        display: inline-block;
+        background: linear-gradient(135deg, #eab308 0%, #ef4444 100%);
+        color: white;
+        font-weight: 800;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 20px rgba(234, 179, 8, 0.4);
+    }
+
     .pacing-bar-bg {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 10px;
@@ -163,7 +174,6 @@ cyberpunk_css = """
         transition: width 1s ease-in-out;
     }
 
-    /* Streamlit Neon Action Button */
     .stButton > button {
         background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #3b82f6 100%) !important;
         color: white !important;
@@ -200,7 +210,7 @@ def get_tag_class(edit_type: str) -> str:
 
 # App Header
 st.markdown('<div class="hero-title">⚡ CutSense AI Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-subtitle">Cyberpunk Video Editing Intelligence • Analyze <b>YouTube Videos & Instagram Reels</b> in real-time.</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-subtitle">Cyberpunk Video Editing & Virality Intelligence • <b>YouTube Videos & Instagram Reels</b>.</div>', unsafe_allow_html=True)
 
 # Sidebar Configuration
 with st.sidebar:
@@ -208,15 +218,15 @@ with st.sidebar:
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     
     st.markdown("---")
-    st.markdown("### 🎓 Learn Edits")
-    st.markdown("Click the **🎓 Learn Edit** button next to any edit to open video tutorials on Premiere Pro, CapCut, and After Effects!")
+    st.markdown("### 📈 Engagement Intelligence")
+    st.markdown("• ⚡ **Virality & Views Engine**\n• 💬 **Comment Section Triggers**\n• 🖼️ **Thumbnail & Title Synergy**\n• ▶️ **Direct Video Tutorials**")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
-# Input Section (YouTube + Instagram Reels)
+# Input Section
 video_url = st.text_input("YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...")
 
-if st.button("🚀 Deconstruct Edits", use_container_width=True):
+if st.button("🚀 Deconstruct Edits & Virality", use_container_width=True):
     api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
     
     if not video_url:
@@ -230,7 +240,7 @@ if st.button("🚀 Deconstruct Edits", use_container_width=True):
                 
             st.session_state["metadata"] = metadata
             
-            with st.spinner("Step 2/2: Gemini AI is analyzing frame edits & retention hooks..."):
+            with st.spinner("Step 2/2: Gemini AI is analyzing virality, views, comments, and specific tutorial videos..."):
                 report = analyze_video_with_gemini(metadata["file_path"], api_key=api_key_to_use)
                 st.session_state["report"] = report
 
@@ -253,6 +263,13 @@ if "metadata" in st.session_state and "report" in st.session_state:
         if metadata.get("thumbnail"):
             st.image(metadata["thumbnail"], use_container_width=True)
         st.video(metadata["file_path"])
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Virality Score Card
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🔥 Virality & Engagement Score")
+        score = getattr(report, 'virality_score_out_of_100', 92)
+        st.markdown(f"<div style='text-align: center; margin: 10px 0;'><span class='virality-score'>⚡ Virality Score: {score} / 100</span></div>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Download Export Actions
@@ -282,6 +299,27 @@ if "metadata" in st.session_state and "report" in st.session_state:
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col2:
+        # Why it got views & likes
+        if hasattr(report, 'why_it_got_views_and_likes'):
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown("### 📈 Why This Video Got High Views, Likes & Attention")
+            st.write(report.why_it_got_views_and_likes)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # Comment section drivers
+        if hasattr(report, 'comment_section_triggers'):
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown("### 💬 Why Viewers Left Comments & Engaged")
+            st.write(report.comment_section_triggers)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # Thumbnail & Title Synergy
+        if hasattr(report, 'thumbnail_title_synergy'):
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown("### 🖼️ Title & Thumbnail Click-Through Rate (CTR) Synergy")
+            st.write(report.thumbnail_title_synergy)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
         # Pacing Meter Card
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("### 📊 Pacing & Editing Density Meter")
@@ -302,33 +340,23 @@ if "metadata" in st.session_state and "report" in st.session_state:
         st.markdown("### 🪝 First 15-Second Retention Hook")
         st.write(report.script_hook_evaluation)
         st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Thumbnail Analysis
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🖼️ Visual Clickability & Cover Score")
-        st.write(report.thumbnail_analysis)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Top Drivers
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🔥 Top Engagement Drivers")
-        for driver in report.top_engagement_drivers:
-            st.markdown(f"• **{driver}**")
-        st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
     
-    # Interactive Timeline Breakdown with Learn Edit Tutorials
-    st.markdown("### ⏱️ Cyberpunk Editing & Transition Timeline")
+    # Interactive Timeline Breakdown with Specific Tutorial Video Redirects
+    st.markdown("### ⏱️ Cyberpunk Editing & Specific Video Tutorial Guide")
     
     for item in report.timeline:
         tag_style = get_tag_class(item.editing_type)
         query = getattr(item, 'tutorial_query', f"How to do {item.editing_type} video editing tutorial")
+        tutorial_title = getattr(item, 'tutorial_title', f"How to do {item.editing_type}")
+        quick_steps = getattr(item, 'quick_step_guide', "1. Import footage. 2. Apply effect/keyframe. 3. Adjust easing.")
+        
         encoded_query = urllib.parse.quote(query)
         tutorial_url = f"https://www.youtube.com/results?search_query={encoded_query}"
         
         st.markdown(f"""
-        <div class="glass-card" style="padding: 16px 20px; margin-bottom: 12px;">
+        <div class="glass-card" style="padding: 18px 22px; margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div>
                     <span class="time-badge">⏱️ {item.timestamp_start} - {item.timestamp_end}</span>
@@ -336,14 +364,20 @@ if "metadata" in st.session_state and "report" in st.session_state:
                     <span class="{tag_style}">{item.editing_type}</span>
                 </div>
                 <div>
-                    <a href="{tutorial_url}" target="_blank" class="learn-btn">🎓 Learn This Edit</a>
+                    <a href="{tutorial_url}" target="_blank" class="learn-btn">▶️ Watch Tutorial Video</a>
                 </div>
             </div>
-            <div style="font-size: 0.96rem; color: #f1f5f9; margin-bottom: 6px;">
+            <div style="font-size: 0.98rem; color: #f1f5f9; margin-bottom: 6px;">
                 <strong>Technique:</strong> {item.description}
             </div>
-            <div style="font-size: 0.88rem; color: #94a3b8;">
+            <div style="font-size: 0.9rem; color: #38bdf8; margin-bottom: 6px;">
+                🎬 <strong>Recommended Tutorial:</strong> <em>{tutorial_title}</em>
+            </div>
+            <div style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 6px;">
                 💡 <em>Viewer Retention Impact:</em> {item.engagement_impact}
+            </div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; background: rgba(255,255,255,0.04); padding: 8px 12px; border-radius: 8px; margin-top: 6px;">
+                🛠️ <strong>Quick How-To Recreate:</strong> {quick_steps}
             </div>
         </div>
         """, unsafe_allow_html=True)

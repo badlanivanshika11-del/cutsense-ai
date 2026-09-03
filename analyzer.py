@@ -16,9 +16,15 @@ class EditingSegment(BaseModel):
     editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, etc.")
     description: str = Field(description="Detailed explanation of what editing technique was used.")
     engagement_impact: str = Field(description="Why this keeps the viewer engaged.")
-    tutorial_query: str = Field(description="Search query to learn this edit in Premiere Pro, CapCut, or After Effects, e.g., 'How to do overhead hand swipe transition tutorial'")
+    tutorial_title: str = Field(description="Title of the best tutorial to learn this technique.")
+    tutorial_query: str = Field(description="Search phrase to find the specific #1 tutorial video for this edit.")
+    quick_step_guide: str = Field(description="Brief 3-step guide on how to recreate this edit in Premiere Pro/CapCut.")
 
 class VideoAnalysisReport(BaseModel):
+    virality_score_out_of_100: int = Field(description="Overall virality and viewer retention score out of 100.")
+    why_it_got_views_and_likes: str = Field(description="Detailed explanation of why this video generated high views, likes, and watch time.")
+    comment_section_triggers: str = Field(description="Specific moments, debates, or skits in the video that drove high comment engagement.")
+    thumbnail_title_synergy: str = Field(description="How the thumbnail and title work together to generate massive click-through rate (CTR).")
     pacing_rating: str = Field(description="Fast-paced, Moderate, or Slow")
     estimated_cuts_per_minute: int
     thumbnail_analysis: str = Field(description="Analysis of thumbnail appeal, contrast, and clickability.")
@@ -27,7 +33,7 @@ class VideoAnalysisReport(BaseModel):
     timeline: list[EditingSegment]
 
 def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API with automatic retry, tutorial links, and model fallback for high demand spikes."""
+    """Uploads video to Gemini API and analyzes editing, virality, comments, and specific tutorial links."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -44,12 +50,12 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
         raise ValueError("Video processing failed on Gemini API.")
         
     prompt = """
-    You are an expert YouTube Video Editor and Audience Retention Analyst.
-    Analyze this video in detail and provide:
-    1. A breakdown of editing techniques used (cuts, transitions, text overlays, zooms, sound drops).
-    2. An assessment of pacing, script hook (first 10-15s), thumbnail appeal, and engagement drivers.
-    3. Timestamped breakdown of major visual transitions and key edit moments.
-    4. For each edit segment, provide a specific tutorial_query (e.g., 'How to do overhead hand swipe transition Premiere Pro CapCut') so editors can learn to recreate it.
+    You are an expert YouTube & Instagram Algorithm Specialist, Video Editor, and Audience Retention Analyst.
+    Perform an in-depth analysis of this video:
+    1. Virality & Engagement Mechanics: Explain in detail WHY this video got high attention, views, likes, and comments. Analyze curiosity gaps, pattern interrupts, and storytelling.
+    2. Comment Section Drivers: Identify specific moments or questions that drove viewers to write comments.
+    3. Thumbnail & Title Synergy: Evaluate how the thumbnail and title work together for maximum CTR.
+    4. Editing & Transition Timeline: For every major edit timestamp, provide the technique, engagement impact, a recommended tutorial title, a specific YouTube search query to open the #1 tutorial video, and a 3-step quick guide to recreate it.
     """
     
     # Fallback models in case of 503 high demand spikes
