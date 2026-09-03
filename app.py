@@ -14,29 +14,32 @@ importlib.reload(downloader)
 importlib.reload(report_generator)
 
 st.set_page_config(
-    page_title="CutSense AI - YouTube & Instagram Reel Studio",
+    page_title="CutSense AI Studio - Cyberpunk Edition",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom Mobile & Laptop Responsive CSS
-custom_css = """
+# Cyberpunk Neon Custom CSS Injection
+cyberpunk_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #090d16;
+        color: #f1f5f9;
     }
     
-    /* Responsive Header Title */
+    /* Hero Title with Cyberpunk Neon Glow */
     .hero-title {
-        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        font-size: clamp(2rem, 5vw, 3.2rem);
         font-weight: 800;
-        background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%);
+        background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #06b6d4 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.2rem;
+        filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.4));
     }
     
     .hero-subtitle {
@@ -45,84 +48,126 @@ custom_css = """
         margin-bottom: 1.5rem;
     }
 
-    /* Glassmorphism Cards */
+    /* Glassmorphism Cards with Neon Border Glow */
     .glass-card {
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 14px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(217, 70, 239, 0.2);
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(139, 92, 246, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .glass-card:hover {
+        border-color: rgba(6, 182, 212, 0.4);
+        box-shadow: 0 12px 35px rgba(6, 182, 212, 0.15);
     }
 
-    /* Platform Badges */
-    .platform-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
-        color: white;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.82rem;
-    }
-
-    /* Metric Badges */
-    .metric-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-        color: white;
-        font-weight: 700;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-    }
-
-    .edit-tag {
-        display: inline-block;
+    /* Distinct Color-Coded Edit Badges */
+    .tag-cut {
         background: rgba(56, 189, 248, 0.15);
         color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.3);
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.82rem;
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .tag-transition {
+        background: rgba(168, 85, 247, 0.15);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    .tag-broll {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    .tag-sfx {
+        background: rgba(236, 72, 153, 0.15);
+        color: #f472b6;
+        border: 1px solid rgba(236, 72, 153, 0.4);
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    .tag-motion {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fb923c;
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
     }
 
     .time-badge {
-        font-family: monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-weight: 700;
         color: #f43f5e;
-        background: rgba(244, 63, 94, 0.1);
-        padding: 4px 8px;
-        border-radius: 6px;
+        background: rgba(244, 63, 94, 0.12);
+        border: 1px solid rgba(244, 63, 94, 0.3);
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 0.9rem;
     }
 
-    /* Responsive Buttons & Touch Targets for Mobile */
+    /* Pacing Meter Bar */
+    .pacing-bar-bg {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 12px;
+        width: 100%;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    
+    .pacing-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6 0%, #a855f7 50%, #f43f5e 100%);
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+
+    /* Streamlit Neon Action Button */
     .stButton > button {
-        background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%) !important;
+        background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #3b82f6 100%) !important;
         color: white !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        font-size: 1rem !important;
-        min-height: 48px !important;
+        border-radius: 14px !important;
+        padding: 14px 28px !important;
+        font-size: 1.05rem !important;
+        min-height: 52px !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+        box-shadow: 0 4px 25px rgba(217, 70, 239, 0.5) !important;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.6) !important;
+        transform: translateY(-3px) scale(1.01) !important;
+        box-shadow: 0 8px 35px rgba(217, 70, 239, 0.8) !important;
     }
 
-    /* Mobile Media Query Adjustments */
+    /* Mobile Responsive Tweaks */
     @media (max-width: 768px) {
         .glass-card {
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 14px;
         }
         .stButton > button {
             width: 100% !important;
@@ -130,27 +175,41 @@ custom_css = """
     }
 </style>
 """
-st.markdown(custom_css, unsafe_allow_html=True)
+st.markdown(cyberpunk_css, unsafe_allow_html=True)
+
+# Helper function to assign color class based on edit type
+def get_tag_class(edit_type: str) -> str:
+    edit_lower = edit_type.lower()
+    if "cut" in edit_lower:
+        return "tag-cut"
+    elif "transition" in edit_lower or "swipe" in edit_lower:
+        return "tag-transition"
+    elif "b-roll" in edit_lower or "showcase" in edit_lower:
+        return "tag-broll"
+    elif "sfx" in edit_lower or "sound" in edit_lower or "audio" in edit_lower:
+        return "tag-sfx"
+    else:
+        return "tag-motion"
 
 # App Header
-st.markdown('<div class="hero-title">🎬 CutSense AI Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-subtitle">Deconstruct editing cuts, transitions & retention hooks for <b>YouTube Videos & Instagram Reels</b>.</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">⚡ CutSense AI Studio</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-subtitle">Cyberpunk Video Editing Intelligence • Analyze <b>YouTube Videos & Instagram Reels</b> in real-time.</div>', unsafe_allow_html=True)
 
-# Sidebar Settings
+# Sidebar Configuration
 with st.sidebar:
     st.markdown("### ⚙️ Studio Settings")
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     
     st.markdown("---")
-    st.markdown("### 📱 Mobile & Desktop Apps")
-    st.markdown("Add this site to your Phone Home Screen for native app usage!")
+    st.markdown("### 🎨 Cyberpunk Palette")
+    st.markdown("• 🔵 **Cuts**: Electric Blue\n• 🟣 **Transitions**: Neon Purple\n• 🟢 **B-Roll**: Mint Green\n• 💗 **SFX Drops**: Hot Pink\n• 🟧 **Graphics**: Bright Orange")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
 # Input Section (YouTube + Instagram Reels)
-video_url = st.text_input("Enter YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...")
+video_url = st.text_input("YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...")
 
-if st.button("🚀 Analyze Video / Reel", use_container_width=True):
+if st.button("🚀 Deconstruct Edits", use_container_width=True):
     api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
     
     if not video_url:
@@ -179,7 +238,6 @@ if "metadata" in st.session_state and "report" in st.session_state:
     platform_label = metadata.get("platform", "Video")
     st.success(f"Loaded {platform_label}: **{metadata['title']}** (By: {metadata['uploader']})")
     
-    # Responsive Columns
     col1, col2 = st.columns([1.1, 1.9])
     
     with col1:
@@ -217,15 +275,24 @@ if "metadata" in st.session_state and "report" in st.session_state:
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col2:
-        # Pacing Cards
+        # Pacing Meter Card
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 📊 Pacing & Editing Density")
+        st.markdown("### 📊 Pacing & Editing Density Meter")
         
-        m1, m2 = st.columns(2)
-        with m1:
-            st.markdown(f"**Overall Pacing:** <span class='metric-badge'>{report.pacing_rating}</span>", unsafe_allow_html=True)
-        with m2:
-            st.markdown(f"**Est. Cuts / Min:** <span class='metric-badge'>{report.estimated_cuts_per_minute} cuts/min</span>", unsafe_allow_html=True)
+        cuts_count = report.estimated_cuts_per_minute
+        bar_percentage = min(100, max(10, cuts_count * 3))
+        
+        st.markdown(f"**Pacing Speed:** <span class='tag-transition'>{report.pacing_rating}</span> &nbsp;&nbsp;|&nbsp;&nbsp; **Density:** <span class='tag-cut'>{cuts_count} cuts/min</span>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="pacing-bar-bg">
+            <div class="pacing-bar-fill" style="width: {bar_percentage}%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+            <span>Slow (0 cuts)</span>
+            <span>Moderate (10 cuts)</span>
+            <span>Fast-Paced (30+ cuts/min)</span>
+        </div>
+        """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Hook Evaluation
@@ -236,7 +303,7 @@ if "metadata" in st.session_state and "report" in st.session_state:
         
         # Thumbnail Analysis
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🖼️ Visual Clickability / Cover Analysis")
+        st.markdown("### 🖼️ Visual Clickability & Cover Score")
         st.write(report.thumbnail_analysis)
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -249,21 +316,22 @@ if "metadata" in st.session_state and "report" in st.session_state:
 
     st.divider()
     
-    # Interactive Timeline Breakdown
-    st.markdown("### ⏱️ Timestamped Editing & Transition Timeline")
+    # Interactive Timeline Breakdown with Color-Coded Tags
+    st.markdown("### ⏱️ Cyberpunk Editing & Transition Timeline")
     
     for item in report.timeline:
+        tag_style = get_tag_class(item.editing_type)
         st.markdown(f"""
-        <div class="glass-card" style="padding: 14px 20px; margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div class="glass-card" style="padding: 16px 20px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div>
                     <span class="time-badge">⏱️ {item.timestamp_start} - {item.timestamp_end}</span>
-                    &nbsp;
-                    <span class="edit-tag">{item.editing_type}</span>
+                    &nbsp;&nbsp;
+                    <span class="{tag_style}">{item.editing_type}</span>
                 </div>
             </div>
-            <div style="font-size: 0.95rem; color: #e2e8f0; margin-bottom: 6px;">
-                <strong>Edit Technique:</strong> {item.description}
+            <div style="font-size: 0.96rem; color: #f1f5f9; margin-bottom: 6px;">
+                <strong>Technique:</strong> {item.description}
             </div>
             <div style="font-size: 0.88rem; color: #94a3b8;">
                 💡 <em>Viewer Retention Impact:</em> {item.engagement_impact}
