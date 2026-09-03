@@ -4,7 +4,7 @@ import importlib
 import downloader
 import analyzer
 import report_generator
-from downloader import download_youtube_video
+from downloader import download_video
 from analyzer import analyze_video_with_gemini
 from report_generator import generate_pdf_report, generate_csv_report
 
@@ -14,13 +14,13 @@ importlib.reload(downloader)
 importlib.reload(report_generator)
 
 st.set_page_config(
-    page_title="CutSense AI - Video Editing & Retention Studio",
+    page_title="CutSense AI - YouTube & Instagram Reel Studio",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS Styling Injection
+# Custom Mobile & Laptop Responsive CSS
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -29,9 +29,9 @@ custom_css = """
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
-    /* Header Gradient Title */
+    /* Responsive Header Title */
     .hero-title {
-        font-size: 2.8rem;
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
         font-weight: 800;
         background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%);
         -webkit-background-clip: text;
@@ -40,9 +40,9 @@ custom_css = """
     }
     
     .hero-subtitle {
-        font-size: 1.15rem;
+        font-size: clamp(0.95rem, 2.5vw, 1.15rem);
         color: #94a3b8;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
 
     /* Glassmorphism Cards */
@@ -52,12 +52,23 @@ custom_css = """
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
+        padding: 16px;
+        margin-bottom: 14px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    
-    /* Metric Cards */
+
+    /* Platform Badges */
+    .platform-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        color: white;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+    }
+
+    /* Metric Badges */
     .metric-badge {
         display: inline-block;
         background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
@@ -88,15 +99,16 @@ custom_css = """
         border-radius: 6px;
     }
 
-    /* Streamlit Button Customization */
+    /* Responsive Buttons & Touch Targets for Mobile */
     .stButton > button {
         background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%) !important;
         color: white !important;
         font-weight: 700 !important;
         border: none !important;
         border-radius: 12px !important;
-        padding: 12px 28px !important;
+        padding: 12px 24px !important;
         font-size: 1rem !important;
+        min-height: 48px !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
     }
@@ -106,12 +118,15 @@ custom_css = """
         box-shadow: 0 8px 30px rgba(139, 92, 246, 0.6) !important;
     }
 
-    /* Input Field Styling */
-    .stTextInput > div > div > input {
-        border-radius: 12px !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        background: rgba(15, 23, 42, 0.6) !important;
-        color: #f8fafc !important;
+    /* Mobile Media Query Adjustments */
+    @media (max-width: 768px) {
+        .glass-card {
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .stButton > button {
+            width: 100% !important;
+        }
     }
 </style>
 """
@@ -119,66 +134,57 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 # App Header
 st.markdown('<div class="hero-title">🎬 CutSense AI Studio</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-subtitle">Deconstruct complex YouTube editing styles, cut-rates, transitions & retention drivers using Gemini 3.6 Flash.</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-subtitle">Deconstruct editing cuts, transitions & retention hooks for <b>YouTube Videos & Instagram Reels</b>.</div>', unsafe_allow_html=True)
 
-# Sidebar Configuration
+# Sidebar Settings
 with st.sidebar:
     st.markdown("### ⚙️ Studio Settings")
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     
     st.markdown("---")
-    st.markdown("### 📌 Features")
-    st.markdown("""
-    - ⚡ **Cut & Transition Detection**
-    - 🪝 **First 15s Hook Evaluation**
-    - 🖼️ **Thumbnail Clickability Score**
-    - 🔥 **Viewer Retention Drivers**
-    - ⏱️ **Timestamped Edit Breakdown**
-    - 📄 **PDF & CSV Exporting**
-    """)
+    st.markdown("### 📱 Mobile & Desktop Apps")
+    st.markdown("Add this site to your Phone Home Screen for native app usage!")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
-# Main Input Section
-url_col, btn_col = st.columns([4, 1])
-with url_col:
-    youtube_url = st.text_input("YouTube Video URL", placeholder="https://www.youtube.com/watch?v=...", label_visibility="collapsed")
-with btn_col:
-    analyze_click = st.button("🚀 Analyze Edits", use_container_width=True)
+# Input Section (YouTube + Instagram Reels)
+video_url = st.text_input("Enter YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...")
 
-if analyze_click:
+if st.button("🚀 Analyze Video / Reel", use_container_width=True):
     api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
     
-    if not youtube_url:
-        st.warning("Please enter a valid YouTube URL.")
+    if not video_url:
+        st.warning("Please enter a valid YouTube or Instagram Reel URL.")
     elif not api_key_to_use:
         st.error("Please enter your Gemini API Key in the sidebar or set the GEMINI_API_KEY environment variable.")
     else:
         try:
-            with st.spinner("Step 1/2: Downloading video stream & metadata..."):
-                metadata = download_youtube_video(youtube_url)
+            with st.spinner("Step 1/2: Downloading video / reel stream..."):
+                metadata = download_video(video_url)
                 
             st.session_state["metadata"] = metadata
             
-            with st.spinner("Step 2/2: Gemini AI is analyzing frame edits, cuts, and retention hooks..."):
+            with st.spinner("Step 2/2: Gemini AI is analyzing frame edits & retention hooks..."):
                 report = analyze_video_with_gemini(metadata["file_path"], api_key=api_key_to_use)
                 st.session_state["report"] = report
 
         except Exception as e:
             st.error(f"An error occurred during analysis: {str(e)}")
 
-# Display Results from Session State if available
+# Display Results from Session State
 if "metadata" in st.session_state and "report" in st.session_state:
     metadata = st.session_state["metadata"]
     report = st.session_state["report"]
     
-    st.success(f"Loaded Analysis for: **{metadata['title']}** (Creator: {metadata['uploader']})")
+    platform_label = metadata.get("platform", "Video")
+    st.success(f"Loaded {platform_label}: **{metadata['title']}** (By: {metadata['uploader']})")
     
+    # Responsive Columns
     col1, col2 = st.columns([1.1, 1.9])
     
     with col1:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### 📽️ Video Preview & Thumbnail")
+        st.markdown(f"#### 📽️ {platform_label} Preview")
         if metadata.get("thumbnail"):
             st.image(metadata["thumbnail"], use_container_width=True)
         st.video(metadata["file_path"])
@@ -196,7 +202,7 @@ if "metadata" in st.session_state and "report" in st.session_state:
             st.download_button(
                 label="📄 PDF Report",
                 data=pdf_bytes,
-                file_name=f"CutSense_Report_{metadata.get('title', 'video')[:15]}.pdf",
+                file_name=f"CutSense_{platform_label.replace(' ', '_')}.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
@@ -204,7 +210,7 @@ if "metadata" in st.session_state and "report" in st.session_state:
             st.download_button(
                 label="📊 CSV Data",
                 data=csv_str,
-                file_name=f"CutSense_Timeline_{metadata.get('title', 'video')[:15]}.csv",
+                file_name=f"CutSense_{platform_label.replace(' ', '_')}.csv",
                 mime="text/csv",
                 use_container_width=True
             )
@@ -217,9 +223,9 @@ if "metadata" in st.session_state and "report" in st.session_state:
         
         m1, m2 = st.columns(2)
         with m1:
-            st.markdown(f"**Overall Pacing Speed:** <span class='metric-badge'>{report.pacing_rating}</span>", unsafe_allow_html=True)
+            st.markdown(f"**Overall Pacing:** <span class='metric-badge'>{report.pacing_rating}</span>", unsafe_allow_html=True)
         with m2:
-            st.markdown(f"**Estimated Cuts / Min:** <span class='metric-badge'>{report.estimated_cuts_per_minute} cuts/min</span>", unsafe_allow_html=True)
+            st.markdown(f"**Est. Cuts / Min:** <span class='metric-badge'>{report.estimated_cuts_per_minute} cuts/min</span>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Hook Evaluation
@@ -230,7 +236,7 @@ if "metadata" in st.session_state and "report" in st.session_state:
         
         # Thumbnail Analysis
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### 🖼️ Thumbnail & Visual Clickability")
+        st.markdown("### 🖼️ Visual Clickability / Cover Analysis")
         st.write(report.thumbnail_analysis)
         st.markdown('</div>', unsafe_allow_html=True)
         
