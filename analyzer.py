@@ -16,6 +16,7 @@ class EditingSegment(BaseModel):
     editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, etc.")
     description: str = Field(description="Detailed explanation of what editing technique was used.")
     engagement_impact: str = Field(description="Why this keeps the viewer engaged.")
+    tutorial_query: str = Field(description="Search query to learn this edit in Premiere Pro, CapCut, or After Effects, e.g., 'How to do overhead hand swipe transition tutorial'")
 
 class VideoAnalysisReport(BaseModel):
     pacing_rating: str = Field(description="Fast-paced, Moderate, or Slow")
@@ -26,7 +27,7 @@ class VideoAnalysisReport(BaseModel):
     timeline: list[EditingSegment]
 
 def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API with automatic retry and model fallback for high demand spikes."""
+    """Uploads video to Gemini API with automatic retry, tutorial links, and model fallback for high demand spikes."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -48,6 +49,7 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
     1. A breakdown of editing techniques used (cuts, transitions, text overlays, zooms, sound drops).
     2. An assessment of pacing, script hook (first 10-15s), thumbnail appeal, and engagement drivers.
     3. Timestamped breakdown of major visual transitions and key edit moments.
+    4. For each edit segment, provide a specific tutorial_query (e.g., 'How to do overhead hand swipe transition Premiere Pro CapCut') so editors can learn to recreate it.
     """
     
     # Fallback models in case of 503 high demand spikes

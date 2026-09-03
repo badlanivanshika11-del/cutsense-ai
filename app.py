@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import importlib
+import urllib.parse
 import downloader
 import analyzer
 import report_generator
@@ -117,6 +118,23 @@ cyberpunk_css = """
         font-size: 0.85rem;
     }
 
+    .learn-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white !important;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        transition: transform 0.2s;
+    }
+
+    .learn-btn:hover {
+        transform: translateY(-2px);
+    }
+
     .time-badge {
         font-family: 'JetBrains Mono', monospace;
         font-weight: 700;
@@ -163,21 +181,10 @@ cyberpunk_css = """
         transform: translateY(-3px) scale(1.01) !important;
         box-shadow: 0 8px 35px rgba(217, 70, 239, 0.8) !important;
     }
-
-    /* Mobile Responsive Tweaks */
-    @media (max-width: 768px) {
-        .glass-card {
-            padding: 14px;
-        }
-        .stButton > button {
-            width: 100% !important;
-        }
-    }
 </style>
 """
 st.markdown(cyberpunk_css, unsafe_allow_html=True)
 
-# Helper function to assign color class based on edit type
 def get_tag_class(edit_type: str) -> str:
     edit_lower = edit_type.lower()
     if "cut" in edit_lower:
@@ -201,8 +208,8 @@ with st.sidebar:
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     
     st.markdown("---")
-    st.markdown("### 🎨 Cyberpunk Palette")
-    st.markdown("• 🔵 **Cuts**: Electric Blue\n• 🟣 **Transitions**: Neon Purple\n• 🟢 **B-Roll**: Mint Green\n• 💗 **SFX Drops**: Hot Pink\n• 🟧 **Graphics**: Bright Orange")
+    st.markdown("### 🎓 Learn Edits")
+    st.markdown("Click the **🎓 Learn Edit** button next to any edit to open video tutorials on Premiere Pro, CapCut, and After Effects!")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
@@ -287,11 +294,6 @@ if "metadata" in st.session_state and "report" in st.session_state:
         <div class="pacing-bar-bg">
             <div class="pacing-bar-fill" style="width: {bar_percentage}%;"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-top: 4px;">
-            <span>Slow (0 cuts)</span>
-            <span>Moderate (10 cuts)</span>
-            <span>Fast-Paced (30+ cuts/min)</span>
-        </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -316,11 +318,15 @@ if "metadata" in st.session_state and "report" in st.session_state:
 
     st.divider()
     
-    # Interactive Timeline Breakdown with Color-Coded Tags
+    # Interactive Timeline Breakdown with Learn Edit Tutorials
     st.markdown("### ⏱️ Cyberpunk Editing & Transition Timeline")
     
     for item in report.timeline:
         tag_style = get_tag_class(item.editing_type)
+        query = getattr(item, 'tutorial_query', f"How to do {item.editing_type} video editing tutorial")
+        encoded_query = urllib.parse.quote(query)
+        tutorial_url = f"https://www.youtube.com/results?search_query={encoded_query}"
+        
         st.markdown(f"""
         <div class="glass-card" style="padding: 16px 20px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
@@ -328,6 +334,9 @@ if "metadata" in st.session_state and "report" in st.session_state:
                     <span class="time-badge">⏱️ {item.timestamp_start} - {item.timestamp_end}</span>
                     &nbsp;&nbsp;
                     <span class="{tag_style}">{item.editing_type}</span>
+                </div>
+                <div>
+                    <a href="{tutorial_url}" target="_blank" class="learn-btn">🎓 Learn This Edit</a>
                 </div>
             </div>
             <div style="font-size: 0.96rem; color: #f1f5f9; margin-bottom: 6px;">
