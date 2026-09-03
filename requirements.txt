@@ -1,0 +1,7 @@
+google-genai
+streamlit
+yt-dlp
+pydantic
+reportlab
+pip-system-certs
+certifi
