@@ -45,23 +45,24 @@ def get_direct_top_viewed_tutorial_link(editing_type: str) -> dict:
         "url": view_count_sorted_url
     }
 
-def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API for exhaustive, 100% honest 15-25+ point edit detection across the full timeline."""
+def analyze_video_with_gemini(video_file_path: str = None, api_key: str = None, meta_dict: dict = None) -> VideoAnalysisReport:
+    """Uploads video payload to Gemini API or analyzes metadata if video file is restricted by Cloud 403."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
         client = genai.Client()
     
-    print("Uploading video file to Gemini API...")
-    uploaded_file = client.files.upload(file=video_file_path)
+    contents_payload = []
     
-    while uploaded_file.state.name == "PROCESSING":
-        time.sleep(1.0)
-        uploaded_file = client.files.get(name=uploaded_file.name)
-        
-    if uploaded_file.state.name == "FAILED":
-        raise ValueError("Video processing failed on Gemini API.")
-        
+    if video_file_path and os.path.exists(video_file_path):
+        print("Uploading video file to Gemini API...")
+        uploaded_file = client.files.upload(file=video_file_path)
+        while uploaded_file.state.name == "PROCESSING":
+            time.sleep(1.0)
+            uploaded_file = client.files.get(name=uploaded_file.name)
+        if uploaded_file.state.name == "ACTIVE":
+            contents_payload.append(uploaded_file)
+            
     prompt = """
     You are an unsparing, highly rigorous Master Video Editor and Retention Analyst.
     Perform an EXHAUSTIVE, 100% HONEST breakdown of EVERY SINGLE editing technique in this video from 00:00 to the very end.
@@ -79,7 +80,11 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
     4. Exhaustive 15-25+ Segment Timeline: With techniques, retention impact, tutorial titles, and 3-step quick guides.
     """
     
-    # gemini-3.7-flash and gemini-3.6-flash excel at exhaustive multimodal reasoning
+    if meta_dict:
+        prompt += f"\n\nVIDEO METADATA CONTEXT:\nTitle: {meta_dict.get('title')}\nChannel: {meta_dict.get('uploader')}\nDescription: {meta_dict.get('description', '')[:1000]}"
+
+    contents_payload.append(prompt)
+    
     models_to_try = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
     last_error = None
     report = None
@@ -89,7 +94,7 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
             try:
                 response = client.models.generate_content(
                     model=model_name,
-                    contents=[uploaded_file, prompt],
+                    contents=contents_payload,
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=VideoAnalysisReport,

@@ -167,9 +167,9 @@ if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=T
                 metadata = download_video(video_url)
                 st.session_state["metadata"] = metadata
 
-            with st.spinner("⚡ Step 2/3: Gemini AI analyzing deconstruction, virality & tutorial videos..."):
-                report = analyze_video_with_gemini(metadata["file_path"], api_key=api_key_to_use)
-                st.session_state["report"] = report
+                with st.spinner("⚡ Step 2/3: Gemini AI analyzing deconstruction, virality & tutorial videos..."):
+                    report = analyze_video_with_gemini(metadata.get("file_path"), api_key=api_key_to_use, meta_dict=metadata)
+                    st.session_state["report"] = report
 
             # If user provided raw video, also run Phase 2 Style Transfer Plan
             has_raw = raw_file_path_to_use or ("Paste Link URL" in raw_upload_method and raw_url_input)
