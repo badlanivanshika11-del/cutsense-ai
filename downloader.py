@@ -8,7 +8,7 @@ except AttributeError:
     pass
 
 def download_video(url: str, output_dir: str = "downloads") -> dict:
-    """Downloads lightweight 360p video stream for ultra-fast download and AI analysis speed."""
+    """Downloads YouTube Videos, Shorts, and Instagram Reels with robust format fallbacks."""
     os.makedirs(output_dir, exist_ok=True)
     is_instagram = "instagram.com" in url.lower() or "instagr.am" in url.lower()
     platform_name = "Instagram Reel" if is_instagram else "YouTube Video"
@@ -19,10 +19,10 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
-    # Fast 360p stream selector for ultra-fast download & AI upload
+    # Bulletproof format fallback strategy for any YouTube/Instagram video
     options_list = [
         {
-            'format': 'b[height<=360]/best[height<=480]/best',
+            'format': 'bestvideo[height<=480]+bestaudio/bestvideo*+bestaudio*/best[height<=480]/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -36,11 +36,17 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'quiet': True,
         },
         {
-            'format': 'b/best',
+            'format': 'best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
             'geo_bypass': True,
+            'quiet': True,
+        },
+        {
+            'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
+            'overwrites': True,
+            'nocheckcertificate': True,
             'quiet': True,
         }
     ]
@@ -68,7 +74,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             last_error = e
             continue
 
-    raise Exception(f"Unable to download video stream after fallback attempts: {str(last_error)}")
+    raise Exception(f"Unable to download video stream after 3 fallback attempts: {str(last_error)}")
 
 # Alias for backwards compatibility
 download_youtube_video = download_video
