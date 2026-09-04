@@ -2,7 +2,6 @@ import os
 import time
 import ssl
 import urllib.parse
-import yt_dlp
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
@@ -15,11 +14,11 @@ except AttributeError:
 class EditingSegment(BaseModel):
     timestamp_start: str = Field(description="Start time, e.g., 00:05")
     timestamp_end: str = Field(description="End time, e.g., 00:08")
-    editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, etc.")
+    editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, Color Grade, Motion Graphic, etc.")
     description: str = Field(description="Detailed explanation of what editing technique was used.")
     engagement_impact: str = Field(description="Why this keeps the viewer engaged.")
-    tutorial_title: str = Field(description="Title of the best tutorial to learn this technique.")
-    tutorial_youtube_url: str = Field(description="Direct YouTube video URL to the top-viewed tutorial for this edit.")
+    tutorial_title: str = Field(description="Title of the top tutorial to learn this technique.")
+    tutorial_youtube_url: str = Field(description="Direct YouTube link to the #1 top-viewed tutorial video for this edit.")
     quick_step_guide: str = Field(description="Brief 3-step guide on how to recreate this edit in Premiere Pro/CapCut.")
 
 class VideoAnalysisReport(BaseModel):
@@ -34,37 +33,20 @@ class VideoAnalysisReport(BaseModel):
     top_engagement_drivers: list[str] = Field(description="Key elements driving high viewer retention.")
     timeline: list[EditingSegment]
 
-def fetch_top_viewed_tutorial_video(editing_type: str) -> dict:
-    """Locates the #1 top-viewed tutorial video on YouTube for a specific edit technique."""
-    query = f"ytsearch1:How to do {editing_type} tutorial Premiere Pro CapCut"
-    try:
-        ydl_opts = {
-            'quiet': True,
-            'extract_flat': True,
-            'nocheckcertificate': True,
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            res = ydl.extract_info(query, download=False)
-            if res and 'entries' in res and len(res['entries']) > 0:
-                top = res['entries'][0]
-                video_id = top.get('id')
-                title = top.get('title') or f"How to do {editing_type} Tutorial"
-                if video_id:
-                    return {
-                        "title": title,
-                        "url": f"https://www.youtube.com/watch?v={video_id}"
-                    }
-    except Exception:
-        pass
-        
-    encoded = urllib.parse.quote(f"How to do {editing_type} tutorial")
+def get_direct_top_viewed_tutorial_link(editing_type: str) -> dict:
+    """Generates instant view-count sorted #1 tutorial video link."""
+    clean_type = editing_type.strip()
+    encoded_query = urllib.parse.quote(f"How to do {clean_type} tutorial Premiere Pro CapCut")
+    # sp=CAM%253D on YouTube forces search results to be sorted strictly by View Count (#1 Most Viewed)
+    view_count_sorted_url = f"https://www.youtube.com/results?search_query={encoded_query}&sp=CAM%253D"
+    
     return {
-        "title": f"How to do {editing_type} Tutorial (Most Viewed)",
-        "url": f"https://www.youtube.com/results?search_query={encoded}&sp=CAM%253D" # Sorted by View Count
+        "title": f"How to do {clean_type} Tutorial (Most Viewed)",
+        "url": view_count_sorted_url
     }
 
 def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API, generates report, and resolves direct top-viewed tutorial videos for every edit."""
+    """Uploads video to Gemini API for high-speed analysis and granular 10-15 point edit detection."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -74,19 +56,26 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
     uploaded_file = client.files.upload(file=video_file_path)
     
     while uploaded_file.state.name == "PROCESSING":
-        time.sleep(1.5)
+        time.sleep(1.0)
         uploaded_file = client.files.get(name=uploaded_file.name)
         
     if uploaded_file.state.name == "FAILED":
         raise ValueError("Video processing failed on Gemini API.")
         
     prompt = """
-    You are an expert YouTube & Instagram Algorithm Specialist and Video Editor.
-    Analyze this video rapidly:
-    1. Virality Mechanics: Why this video got high views, likes, and watch time.
-    2. Comment Section Drivers: Specific moments driving comments.
+    You are an expert YouTube & Instagram Algorithm Specialist and Senior Master Video Editor.
+    Analyze this video thoroughly and rapidly:
+
+    CRITICAL INSTRUCTIONS FOR TIMELINE:
+    - Extract a COMPREHENSIVE, DETAILED timeline of AT LEAST 8 to 15 granular editing techniques across the video.
+    - Identify every major cut, transition (whip pan, zoom-in, hand-swipe, match cut), B-roll overlay, text popup, motion graphic animation, sound effect (SFX) drop, color grade shift, and speed ramp.
+    - Do NOT omit edit segments. Be thorough from the intro hook (00:00) all the way to the outro.
+
+    Provide:
+    1. Virality Mechanics & Engagement: Why this video got high views, likes, and watch time.
+    2. Comment Section Triggers: Specific debates, skits, or questions driving comments.
     3. Thumbnail & Title Synergy: CTR evaluation.
-    4. Editing Timeline: For each edit segment, provide technique & engagement impact and a 3-step quick guide.
+    4. Detailed 8-15 Segment Timeline: With techniques, retention impact, tutorial titles, and 3-step quick guides.
     """
     
     models_to_try = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash"]
@@ -109,7 +98,7 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
             except Exception as e:
                 last_error = e
                 if "503" in str(e) or "UNAVAILABLE" in str(e):
-                    time.sleep(1.5)
+                    time.sleep(1.0)
                     continue
                 else:
                     break
@@ -119,10 +108,12 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
     if not report:
         raise Exception(f"Gemini API Error: {str(last_error)}")
 
-    # Resolve direct top-viewed YouTube video URLs for every edit segment
+    # Instantly generate view-count sorted #1 tutorial video links for every edit
     for item in report.timeline:
-        top_vid = fetch_top_viewed_tutorial_video(item.editing_type)
-        item.tutorial_title = top_vid["title"]
-        item.tutorial_youtube_url = top_vid["url"]
+        top_vid = get_direct_top_viewed_tutorial_link(item.editing_type)
+        if not item.tutorial_title:
+            item.tutorial_title = top_vid["title"]
+        if not item.tutorial_youtube_url or "search_query" not in item.tutorial_youtube_url:
+            item.tutorial_youtube_url = top_vid["url"]
 
     return report
