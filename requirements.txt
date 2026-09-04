@@ -3,5 +3,7 @@ streamlit
 yt-dlp
 pydantic
 reportlab
+fastapi
+uvicorn
 pip-system-certs
 certifi
