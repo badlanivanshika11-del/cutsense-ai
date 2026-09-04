@@ -102,7 +102,7 @@ st.markdown(clean_css, unsafe_allow_html=True)
 
 # App Header
 st.markdown('<div class="hero-title">⚡ CutSense AI Master Studio</div>', unsafe_allow_html=True)
-st.caption("Video Deconstruct • Virality Analytics • Style Transfer • Copy-Paste Timeline Script • Multi-Software Advisor")
+st.caption("Video Deconstruct • Virality Analytics • Style Transfer • Modular Short-Clip Video Templates • Multi-Software Advisor")
 
 # Sidebar Settings
 with st.sidebar:
@@ -116,22 +116,32 @@ with st.sidebar:
 
 # UNIFIED UNIFIED INPUT SECTION FOR PHASE 1 & 2
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-st.markdown("### 🎬 Input Video & Reference Settings")
+st.markdown("### 🎬 Input Video & Raw Clips Settings")
 
 col_ref, col_raw = st.columns(2)
 
 with col_ref:
-    st.markdown("#### 1. Reference Video to Learn / Copy Editing Style")
+    st.markdown("#### 1. Reference Video to Copy Style / Deconstruct")
     video_url = st.text_input("YouTube / Instagram Reel Link:", placeholder="https://www.youtube.com/watch?v=...", key="master_url")
 
 with col_raw:
-    st.markdown("#### 2. Your Raw Video File or Link (To Apply Style & Get Copy-Paste Script)")
-    uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Upload your video file (0.6 GB supported)", key="master_file")
+    st.markdown("#### 2. Your Raw Video / Short Clips (File Upload or Link)")
+    uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Upload your raw video clip", key="master_file")
     raw_url_input = st.text_input("OR Paste Raw Video Link URL:", placeholder="https://www.youtube.com/watch?v=...", key="master_raw_url")
+
+    # SAVE UPLOADED FILE PERSISTENTLY INTO SESSION STATE IMMEDIATELY
+    if uploaded_file:
+        os.makedirs("downloads/uploaded_raw", exist_ok=True)
+        saved_raw_path = os.path.join("downloads/uploaded_raw", uploaded_file.name)
+        with open(saved_raw_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.session_state["raw_file_path"] = saved_raw_path
+        st.session_state["raw_title"] = uploaded_file.name
+        st.success(f"📁 Raw video loaded: **{uploaded_file.name}**")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=True, key="master_submit"):
+if st.button("🚀 Analyze, Deconstruct & Generate Editing Template", use_container_width=True, key="master_submit"):
     api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
     
     if not video_url:
@@ -140,19 +150,16 @@ if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=T
         st.error("Please enter your Gemini API Key in the sidebar or set GEMINI_API_KEY.")
     else:
         try:
-            raw_file_path_to_use = None
-            if uploaded_file:
-                os.makedirs("downloads/uploaded_raw", exist_ok=True)
-                raw_file_path_to_use = os.path.join("downloads/uploaded_raw", uploaded_file.name)
-                with open(raw_file_path_to_use, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                st.session_state["raw_title"] = uploaded_file.name
-            elif raw_url_input and raw_url_input.strip():
-                with st.spinner("⚡ Downloading your raw video link..."):
+            # 1. Check raw video path from session state or URL input
+            raw_path = st.session_state.get("raw_file_path")
+            if not raw_path and raw_url_input and raw_url_input.strip():
+                with st.spinner("⚡ Downloading raw video link..."):
                     raw_meta = download_video(raw_url_input.strip(), output_dir="downloads/raw")
-                    raw_file_path_to_use = raw_meta.get("file_path")
+                    raw_path = raw_meta.get("file_path")
+                    st.session_state["raw_file_path"] = raw_path
                     st.session_state["raw_title"] = raw_meta.get("title", "Your Raw Video")
 
+            # 2. Download & Analyze Reference Video (Phase 1)
             with st.spinner("⚡ Step 1/3: Downloading reference video stream..."):
                 metadata = download_video(video_url)
                 st.session_state["metadata"] = metadata
@@ -161,14 +168,11 @@ if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=T
                 report = analyze_video_with_gemini(metadata.get("file_path"), api_key=api_key_to_use, meta_dict=metadata)
                 st.session_state["report"] = report
 
-            # Run Phase 2 Style Transfer if user provided raw video
-            if raw_file_path_to_use:
-                with st.spinner("⚡ Step 3/3: Mapping reference editing style onto your raw video clip..."):
-                    ref_paths = [metadata["file_path"]] if metadata.get("file_path") else []
-                    plan = transfer_style_to_raw_video(ref_paths, raw_file_path_to_use, api_key=api_key_to_use)
-                    st.session_state["style_plan"] = plan
-            else:
-                st.session_state.pop("style_plan", None)
+            # 3. Generate Modular Short-Clip Style Transfer Template (Phase 2)
+            ref_paths = [metadata["file_path"]] if metadata.get("file_path") else []
+            with st.spinner("⚡ Step 3/3: Building modular short-clip editing template for your video..."):
+                plan = transfer_style_to_raw_video(ref_paths, raw_path, api_key=api_key_to_use)
+                st.session_state["style_plan"] = plan
 
         except Exception as e:
             st.error(f"An error occurred during analysis: {str(e)}")
@@ -181,13 +185,14 @@ if "metadata" in st.session_state and "report" in st.session_state:
     
     st.success(f"Analysis Complete for {platform_label}: **{metadata['title']}** (By: {metadata['uploader']})")
 
-    # PROMINENT PHASE 2 SECTION AT TOP IF RAW VIDEO WAS PROVIDED
+    # PROMINENT PHASE 2 MODULAR SHORT-CLIP TEMPLATE AT TOP
     if "style_plan" in st.session_state:
         plan = st.session_state["style_plan"]
-        raw_title = st.session_state.get("raw_title", "Your Uploaded Video")
+        raw_title = st.session_state.get("raw_title", "Your Video Clips")
         
-        st.markdown(f"### 📋 1:1 COPY-PASTE READY EDITING SCRIPT FOR YOUR VIDEO ({raw_title})")
-        
+        st.markdown(f"### 🎬 MODULAR SHORT-CLIP EDITING TEMPLATE FOR: **{raw_title}**")
+        st.write("Follow this clip-by-clip assembly template to arrange your short raw video clips into a high-retention final video!")
+
         sc1, sc2, sc3 = st.columns(3)
         with sc1:
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -208,38 +213,47 @@ if "metadata" in st.session_state and "report" in st.session_state:
         st.write(plan.overall_editing_vibe)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("#### 🛠️ Timestamped Instructions & Pre-Designed Copy-Paste Text")
-        for idx, item in enumerate(getattr(plan, 'step_by_step_timeline', getattr(plan, 'step_by_timeline', [])), 1):
-            mobile_steps = getattr(item, 'how_to_do_in_mobile_apps', getattr(item, 'how_to_do_in_capcut', 'Apply transition/text preset.'))
-            desktop_steps = getattr(item, 'how_to_do_in_desktop_apps', getattr(item, 'how_to_do_in_premiere', 'Apply keyframe effect.'))
-            
+        st.markdown("#### ✂️ Clip-by-Clip Assembly Template (Add your short clips here):")
+        
+        clip_list = getattr(plan, 'modular_clip_template', getattr(plan, 'step_by_step_timeline', []))
+        for idx, item in enumerate(clip_list, 1):
+            clip_num = getattr(item, 'clip_number', idx)
+            duration = getattr(item, 'recommended_duration_seconds', '3-5 seconds')
+            purpose = getattr(item, 'clip_purpose', 'Short Clip Slot')
+            raw_inst = getattr(item, 'what_raw_clip_to_insert', 'Insert your short raw video clip snippet here.')
+            transition = getattr(item, 'transition_to_next_clip', getattr(item, 'transition_name', 'Cut'))
+            copy_text = getattr(item, 'copy_paste_text_popup', getattr(item, 'copy_paste_text', ''))
+            sfx = getattr(item, 'recommended_sfx_drop', getattr(item, 'recommended_sfx', 'Whoosh.wav'))
+            mobile_steps = getattr(item, 'how_to_assemble_in_mobile_apps', getattr(item, 'how_to_do_in_mobile_apps', 'Import clip & trim.'))
+            desktop_steps = getattr(item, 'how_to_assemble_in_desktop_apps', getattr(item, 'how_to_do_in_desktop_apps', 'Import clip & trim.'))
+
             st.markdown(f"""
             <div class="glass-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
                     <div>
-                        <span style="font-family: monospace; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 8px; border-radius: 6px;">⏱️ Timestamp: {item.timestamp}</span>
+                        <span style="font-family: monospace; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 10px; border-radius: 6px;">🎬 CLIP #{clip_num} ({duration})</span>
                         &nbsp;&nbsp;
-                        <span style="font-weight: 700; color: #38bdf8;">[{item.action_type}]</span>
+                        <span style="font-weight: 700; color: #38bdf8;">[{purpose}]</span>
                     </div>
                 </div>
-                <div style="margin: 8px 0;">
-                    💬 <strong>Copy-Paste Text Content:</strong>
-                    <div class="copy-box">{item.copy_paste_text}</div>
+                <div style="font-size: 0.94rem; color: #f1f5f9; margin-bottom: 6px;">
+                    📹 <strong>What Raw Clip to Insert Here:</strong> {raw_inst}
                 </div>
+                {f'<div style="margin: 6px 0;">💬 <strong>Copy-Paste Text Overlay:</strong><div class="copy-box">{copy_text}</div></div>' if copy_text else ''}
                 <div style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 6px;">
-                    🔊 <strong>Recommended SFX Sound:</strong> <code>{item.recommended_sfx}</code> &nbsp;|&nbsp; 
-                    ✨ <strong>Transition Effect:</strong> <code>{item.transition_name}</code>
+                    ✨ <strong>Transition to Next Clip:</strong> <code>{transition}</code> &nbsp;|&nbsp; 
+                    🔊 <strong>SFX Sound Drop:</strong> <code>{sfx}</code>
                 </div>
                 <div style="font-size: 0.85rem; color: #94a3b8; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                    📱 <strong>Mobile Apps (CapCut / VN / InShot):</strong> {mobile_steps}<br>
-                    💻 <strong>Desktop Software (Premiere Pro / DaVinci Resolve / Final Cut):</strong> {desktop_steps}
+                    📱 <strong>CapCut / VN / InShot Step:</strong> {mobile_steps}<br>
+                    💻 <strong>Premiere Pro / DaVinci / Final Cut Step:</strong> {desktop_steps}
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
         st.divider()
 
-    # METRICS ROW
+    # METRICS ROW (PHASE 1)
     col1, col2 = st.columns([1.1, 1.9])
     
     with col1:

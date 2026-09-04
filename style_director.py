@@ -10,27 +10,28 @@ try:
 except AttributeError:
     pass
 
-class EditInstruction(BaseModel):
-    timestamp: str = Field(description="Timestamp in user's raw video, e.g., 00:03")
-    action_type: str = Field(description="Cut, Transition, SFX, Text Popup, B-roll, Speed Ramp, Color Grade")
-    style_from_reference: str = Field(description="Which reference video style this comes from.")
-    copy_paste_text: str = Field(description="Pre-designed text content for user to copy-paste into editor.")
-    recommended_sfx: str = Field(description="Exact SFX sound to play, e.g., 'Whoosh_Fast.wav', 'Pop_Bubble.mp3'")
-    transition_name: str = Field(description="Exact transition effect name to use.")
-    how_to_do_in_mobile_apps: str = Field(description="Step-by-step instructions for Mobile Apps (CapCut / VN Editor / InShot / KineMaster).")
-    how_to_do_in_desktop_apps: str = Field(description="Step-by-step instructions for PC/Mac Software (Premiere Pro / DaVinci Resolve / Final Cut Pro / After Effects).")
+class ClipSlot(BaseModel):
+    clip_number: int = Field(description="Clip slot index, e.g., 1, 2, 3")
+    recommended_duration_seconds: str = Field(description="Ideal duration for this short clip slot, e.g., '3-5 seconds'")
+    clip_purpose: str = Field(description="Purpose of this clip, e.g., 'Intro Retention Hook', 'Talking Head Explanation', 'Action B-Roll'")
+    what_raw_clip_to_insert: str = Field(description="Exact instruction on which short raw video clip/part to place here.")
+    transition_to_next_clip: str = Field(description="Transition effect to connect to the next clip slot.")
+    copy_paste_text_popup: str = Field(description="Pre-designed text content to overlay on this clip.")
+    recommended_sfx_drop: str = Field(description="Exact SFX sound drop for this clip slot.")
+    how_to_assemble_in_mobile_apps: str = Field(description="Step-by-step assembly for CapCut / VN / InShot.")
+    how_to_assemble_in_desktop_apps: str = Field(description="Step-by-step assembly for Premiere Pro / DaVinci Resolve / Final Cut.")
 
 class StyleTransferPlan(BaseModel):
-    template_name: str = Field(description="Name given to this editing style template, e.g., 'Viral Fast-Paced Reel'")
+    template_name: str = Field(description="Name given to this editing style template, e.g., 'Viral Fast-Paced Reel Template'")
     recommended_editing_app: str = Field(description="Best editing app suited for this style (CapCut, VN, Premiere Pro, DaVinci Resolve, InShot, Final Cut Pro, or After Effects) with clear reasoning.")
-    alternative_apps: list[str] = Field(description="Alternative supported editing software options (e.g. ['VN Editor', 'DaVinci Resolve', 'InShot', 'Final Cut Pro']).")
+    alternative_apps: list[str] = Field(description="Alternative supported editing software options.")
     difficulty_level: str = Field(description="Beginner, Intermediate, or Advanced")
     overall_editing_vibe: str = Field(description="Summary of the visual aesthetic transferred from reference videos.")
     suggested_background_music: str = Field(description="Type of background music genre & bpm to use.")
-    step_by_step_timeline: list[EditInstruction]
+    modular_clip_template: list[ClipSlot]
 
-def transfer_style_to_raw_video(reference_video_paths: list[str], raw_video_path: str, api_key: str = None) -> StyleTransferPlan:
-    """Analyzes 1-3 reference videos + user's raw video file/URL to generate a 1:1 copy-paste editing plan across all major editing apps."""
+def transfer_style_to_raw_video(reference_video_paths: list[str], raw_video_path: str = None, api_key: str = None) -> StyleTransferPlan:
+    """Analyzes reference video style + user's raw video file to build a modular clip-by-clip editing template."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -38,13 +39,13 @@ def transfer_style_to_raw_video(reference_video_paths: list[str], raw_video_path
 
     uploaded_files = []
     
-    print("Uploading reference and raw video files to Gemini API...")
+    print("Uploading video files for style transfer...")
     for path in reference_video_paths:
-        if os.path.exists(path):
+        if path and os.path.exists(path):
             uf = client.files.upload(file=path)
             uploaded_files.append(uf)
 
-    if os.path.exists(raw_video_path):
+    if raw_video_path and os.path.exists(raw_video_path):
         raw_uf = client.files.upload(file=raw_video_path)
         uploaded_files.append(raw_uf)
 
@@ -54,17 +55,20 @@ def transfer_style_to_raw_video(reference_video_paths: list[str], raw_video_path
             uf = client.files.get(name=uf.name)
 
     prompt = """
-    You are a World-Class AI Video Editing Director & Multi-Software Advisor.
-    The user provided Reference Video(s) showing a high-performing editing style, AND their own Raw Video clip.
+    You are a Master AI Video Director & Short-Form Video Template Architect.
+    The user provided a Reference Video showing a viral editing style, AND/OR their own Raw Video footage.
 
     YOUR MISSION:
-    1. Extract the visual & audio editing DNA from the Reference Video(s) (cuts, text popup designs, SFX drops, B-roll timing, transitions).
-    2. Map that EXACT editing style onto the User's Raw Video clip.
-    3. Evaluate ALL MAJOR EDITING SOFTWARE options:
-       - Mobile/Quick: CapCut, VN Video Editor, InShot, KineMaster
-       - PC/Mac Professional: Premiere Pro, DaVinci Resolve (Free), Final Cut Pro (Mac), After Effects
-       - Explicitly state WHICH APP is the single easiest and best choice for this video's style.
-    4. Generate a 100% COPY-PASTE READY Timeline Script for the user's raw video with instructions for both Mobile Apps and Desktop Software!
+    Build a MODULAR CLIP-BY-CLIP EDITING TEMPLATE for the user to assemble their short raw video clips into a high-retention final video:
+
+    1. Extract the reference video's exact editing DNA (cuts, transitions, text popups, SFX drops, B-roll pacing).
+    2. Create a MODULAR SHORT-CLIP ASSEMBLY PLAN (Clip #1, Clip #2, Clip #3...):
+       - Give exact recommended clip duration (e.g. '3-4 seconds').
+       - Tell the user EXACTLY which raw video clip or action snippet to insert in each slot.
+       - Provide pre-designed text content to copy-paste.
+       - Recommend exact SFX sound drops.
+       - Provide step-by-step instructions for Mobile Apps (CapCut / VN / InShot) AND Desktop Software (Premiere Pro / DaVinci / Final Cut)!
+    3. State WHICH EDITING APP is easiest to build this template in.
     """
 
     models_to_try = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
@@ -74,7 +78,7 @@ def transfer_style_to_raw_video(reference_video_paths: list[str], raw_video_path
         try:
             response = client.models.generate_content(
                 model=model_name,
-                contents=[*uploaded_files, prompt],
+                contents=[*uploaded_files, prompt] if uploaded_files else [prompt],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=StyleTransferPlan,
