@@ -18,7 +18,7 @@ importlib.reload(report_generator)
 importlib.reload(style_director)
 
 st.set_page_config(
-    page_title="CutSense AI Master Studio - Phase 1 & 2",
+    page_title="CutSense AI Master Studio",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -85,18 +85,6 @@ clean_css = """
         font-size: 1rem;
     }
 
-    .learn-btn {
-        display: inline-block;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white !important;
-        font-weight: 700;
-        text-decoration: none;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 0.82rem;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
     .stButton > button {
         background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #3b82f6 100%) !important;
         color: white !important;
@@ -114,14 +102,14 @@ st.markdown(clean_css, unsafe_allow_html=True)
 
 # App Header
 st.markdown('<div class="hero-title">⚡ CutSense AI Master Studio</div>', unsafe_allow_html=True)
-st.caption("Phase 1 & 2 Combined • Video Deconstruct • Virality Analytics • Style Transfer • Copy-Paste Timeline • Multi-App Advisor")
+st.caption("Video Deconstruct • Virality Analytics • Style Transfer • Copy-Paste Timeline Script • Multi-Software Advisor")
 
-# Sidebar Configuration
+# Sidebar Settings
 with st.sidebar:
     st.markdown("### ⚙️ Studio Settings")
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     st.markdown("---")
-    st.markdown("### 📱 Supported Apps")
+    st.markdown("### 📱 Supported Editing Apps")
     st.markdown("• CapCut\n• VN Video Editor\n• InShot\n• DaVinci Resolve\n• Premiere Pro\n• Final Cut Pro\n• After Effects")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
@@ -133,24 +121,13 @@ st.markdown("### 🎬 Input Video & Reference Settings")
 col_ref, col_raw = st.columns(2)
 
 with col_ref:
-    st.markdown("#### 1. Analyzed / Reference Video (YouTube or Reel Link)")
-    video_url = st.text_input("Video URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...", key="master_url")
+    st.markdown("#### 1. Reference Video to Learn / Copy Editing Style")
+    video_url = st.text_input("YouTube / Instagram Reel Link:", placeholder="https://www.youtube.com/watch?v=...", key="master_url")
 
 with col_raw:
-    st.markdown("#### 2. Optional: Your Raw Video (To Transfer Style & Get Copy-Paste Script)")
-    raw_upload_method = st.radio("Input Raw Video Clip:", ["📁 Upload Video File", "🔗 Paste Link URL", "🚫 None (Analysis Only)"], horizontal=True, key="master_raw_method")
-    
-    raw_file_path_to_use = None
-    if "Upload Video File" in raw_upload_method:
-        uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Supports raw video files up to 1.0 GB (1000 MB)", key="master_file")
-        if uploaded_file:
-            os.makedirs("downloads/uploaded_raw", exist_ok=True)
-            raw_file_path_to_use = os.path.join("downloads/uploaded_raw", uploaded_file.name)
-            with open(raw_file_path_to_use, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"File uploaded: **{uploaded_file.name}**")
-    elif "Paste Link URL" in raw_upload_method:
-        raw_url_input = st.text_input("Raw Video Link URL:", placeholder="https://www.youtube.com/watch?v=...", key="master_raw_url")
+    st.markdown("#### 2. Your Raw Video File or Link (To Apply Style & Get Copy-Paste Script)")
+    uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Upload your video file (0.6 GB supported)", key="master_file")
+    raw_url_input = st.text_input("OR Paste Raw Video Link URL:", placeholder="https://www.youtube.com/watch?v=...", key="master_raw_url")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -158,28 +135,37 @@ if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=T
     api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
     
     if not video_url:
-        st.warning("Please enter a Video URL to analyze.")
+        st.warning("Please enter a Reference Video URL to analyze.")
     elif not api_key_to_use:
         st.error("Please enter your Gemini API Key in the sidebar or set GEMINI_API_KEY.")
     else:
         try:
-            with st.spinner("⚡ Step 1/3: Downloading video stream..."):
+            raw_file_path_to_use = None
+            if uploaded_file:
+                os.makedirs("downloads/uploaded_raw", exist_ok=True)
+                raw_file_path_to_use = os.path.join("downloads/uploaded_raw", uploaded_file.name)
+                with open(raw_file_path_to_use, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                st.session_state["raw_title"] = uploaded_file.name
+            elif raw_url_input and raw_url_input.strip():
+                with st.spinner("⚡ Downloading your raw video link..."):
+                    raw_meta = download_video(raw_url_input.strip(), output_dir="downloads/raw")
+                    raw_file_path_to_use = raw_meta.get("file_path")
+                    st.session_state["raw_title"] = raw_meta.get("title", "Your Raw Video")
+
+            with st.spinner("⚡ Step 1/3: Downloading reference video stream..."):
                 metadata = download_video(video_url)
                 st.session_state["metadata"] = metadata
 
-                with st.spinner("⚡ Step 2/3: Gemini AI analyzing deconstruction, virality & tutorial videos..."):
-                    report = analyze_video_with_gemini(metadata.get("file_path"), api_key=api_key_to_use, meta_dict=metadata)
-                    st.session_state["report"] = report
+            with st.spinner("⚡ Step 2/3: Gemini AI analyzing frame edits & virality..."):
+                report = analyze_video_with_gemini(metadata.get("file_path"), api_key=api_key_to_use, meta_dict=metadata)
+                st.session_state["report"] = report
 
-            # If user provided raw video, also run Phase 2 Style Transfer Plan
-            has_raw = raw_file_path_to_use or ("Paste Link URL" in raw_upload_method and raw_url_input)
-            if has_raw:
+            # Run Phase 2 Style Transfer if user provided raw video
+            if raw_file_path_to_use:
                 with st.spinner("⚡ Step 3/3: Mapping reference editing style onto your raw video clip..."):
-                    if not raw_file_path_to_use:
-                        raw_meta = download_video(raw_url_input, output_dir="downloads/raw")
-                        raw_file_path_to_use = raw_meta["file_path"]
-                        
-                    plan = transfer_style_to_raw_video([metadata["file_path"]], raw_file_path_to_use, api_key=api_key_to_use)
+                    ref_paths = [metadata["file_path"]] if metadata.get("file_path") else []
+                    plan = transfer_style_to_raw_video(ref_paths, raw_file_path_to_use, api_key=api_key_to_use)
                     st.session_state["style_plan"] = plan
             else:
                 st.session_state.pop("style_plan", None)
@@ -187,7 +173,7 @@ if st.button("🚀 Analyze, Deconstruct & Transfer Style", use_container_width=T
         except Exception as e:
             st.error(f"An error occurred during analysis: {str(e)}")
 
-# UNIFIED DASHBOARD DISPLAY (PHASE 1 & PHASE 2 COMBINED)
+# UNIFIED DASHBOARD DISPLAY
 if "metadata" in st.session_state and "report" in st.session_state:
     metadata = st.session_state["metadata"]
     report = st.session_state["report"]
@@ -195,7 +181,65 @@ if "metadata" in st.session_state and "report" in st.session_state:
     
     st.success(f"Analysis Complete for {platform_label}: **{metadata['title']}** (By: {metadata['uploader']})")
 
-    # TOP METRICS ROW
+    # PROMINENT PHASE 2 SECTION AT TOP IF RAW VIDEO WAS PROVIDED
+    if "style_plan" in st.session_state:
+        plan = st.session_state["style_plan"]
+        raw_title = st.session_state.get("raw_title", "Your Uploaded Video")
+        
+        st.markdown(f"### 📋 1:1 COPY-PASTE READY EDITING SCRIPT FOR YOUR VIDEO ({raw_title})")
+        
+        sc1, sc2, sc3 = st.columns(3)
+        with sc1:
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown(f"**Recommended Editing App:**<br><span class='app-recommendation'>💡 {plan.recommended_editing_app}</span>", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        with sc2:
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown(f"**Difficulty:** **{plan.difficulty_level}**", unsafe_allow_html=True)
+            st.markdown(f"**Template Style:** *{plan.template_name}*", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        with sc3:
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.markdown(f"🎵 **Suggested BGM:**<br>*{plan.suggested_background_music}*", unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🎨 Visual Aesthetic & Style Transfer Vibe")
+        st.write(plan.overall_editing_vibe)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown("#### 🛠️ Timestamped Instructions & Pre-Designed Copy-Paste Text")
+        for idx, item in enumerate(getattr(plan, 'step_by_step_timeline', getattr(plan, 'step_by_timeline', [])), 1):
+            mobile_steps = getattr(item, 'how_to_do_in_mobile_apps', getattr(item, 'how_to_do_in_capcut', 'Apply transition/text preset.'))
+            desktop_steps = getattr(item, 'how_to_do_in_desktop_apps', getattr(item, 'how_to_do_in_premiere', 'Apply keyframe effect.'))
+            
+            st.markdown(f"""
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                    <div>
+                        <span style="font-family: monospace; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 8px; border-radius: 6px;">⏱️ Timestamp: {item.timestamp}</span>
+                        &nbsp;&nbsp;
+                        <span style="font-weight: 700; color: #38bdf8;">[{item.action_type}]</span>
+                    </div>
+                </div>
+                <div style="margin: 8px 0;">
+                    💬 <strong>Copy-Paste Text Content:</strong>
+                    <div class="copy-box">{item.copy_paste_text}</div>
+                </div>
+                <div style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 6px;">
+                    🔊 <strong>Recommended SFX Sound:</strong> <code>{item.recommended_sfx}</code> &nbsp;|&nbsp; 
+                    ✨ <strong>Transition Effect:</strong> <code>{item.transition_name}</code>
+                </div>
+                <div style="font-size: 0.85rem; color: #94a3b8; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
+                    📱 <strong>Mobile Apps (CapCut / VN / InShot):</strong> {mobile_steps}<br>
+                    💻 <strong>Desktop Software (Premiere Pro / DaVinci Resolve / Final Cut):</strong> {desktop_steps}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.divider()
+
+    # METRICS ROW
     col1, col2 = st.columns([1.1, 1.9])
     
     with col1:
@@ -203,7 +247,10 @@ if "metadata" in st.session_state and "report" in st.session_state:
         st.markdown(f"#### 📽️ {platform_label} Preview")
         if metadata.get("thumbnail"):
             st.image(metadata["thumbnail"], use_container_width=True)
-        st.video(metadata["file_path"])
+        if metadata.get("file_path") and os.path.exists(metadata["file_path"]):
+            st.video(metadata["file_path"])
+        elif metadata.get("webpage_url"):
+            st.video(metadata["webpage_url"])
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Virality Card
@@ -248,64 +295,9 @@ if "metadata" in st.session_state and "report" in st.session_state:
         with st.expander("🪝 First 15-Second Retention Hook", expanded=False):
             st.write(report.script_hook_evaluation)
 
-    # PHASE 2 STYLE TRANSFER SECTION (IF RAW VIDEO PROVIDED)
-    if "style_plan" in st.session_state:
-        plan = st.session_state["style_plan"]
-        st.divider()
-        st.markdown("### ⚡ Phase 2: Copy-Paste Editing Blueprint & Software Advisor for Your Video")
-        
-        sc1, sc2, sc3 = st.columns(3)
-        with sc1:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown(f"**Recommended Editing App:**<br><span class='app-recommendation'>💡 {plan.recommended_editing_app}</span>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-        with sc2:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown(f"**Difficulty:** **{plan.difficulty_level}**", unsafe_allow_html=True)
-            st.markdown(f"**Style Name:** *{plan.template_name}*", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-        with sc3:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown(f"🎵 **Suggested BGM:**<br>*{plan.suggested_background_music}*", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### 🎨 Visual Aesthetic & Style Transfer Vibe")
-        st.write(plan.overall_editing_vibe)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("#### 📋 1:1 Copy-Paste Ready Timeline Script for Your Raw Video")
-        for idx, item in enumerate(getattr(plan, 'step_by_step_timeline', getattr(plan, 'step_by_timeline', [])), 1):
-            mobile_steps = getattr(item, 'how_to_do_in_mobile_apps', getattr(item, 'how_to_do_in_capcut', 'Apply transition/text preset.'))
-            desktop_steps = getattr(item, 'how_to_do_in_desktop_apps', getattr(item, 'how_to_do_in_premiere', 'Apply keyframe effect.'))
-            
-            st.markdown(f"""
-            <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
-                    <div>
-                        <span style="font-family: monospace; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 8px; border-radius: 6px;">⏱️ Timestamp: {item.timestamp}</span>
-                        &nbsp;&nbsp;
-                        <span style="font-weight: 700; color: #38bdf8;">[{item.action_type}]</span>
-                    </div>
-                </div>
-                <div style="margin: 8px 0;">
-                    💬 <strong>Copy-Paste Text Content:</strong>
-                    <div class="copy-box">{item.copy_paste_text}</div>
-                </div>
-                <div style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 6px;">
-                    🔊 <strong>Recommended SFX Sound:</strong> <code>{item.recommended_sfx}</code> &nbsp;|&nbsp; 
-                    ✨ <strong>Transition Effect:</strong> <code>{item.transition_name}</code>
-                </div>
-                <div style="font-size: 0.85rem; color: #94a3b8; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                    📱 <strong>Mobile Apps (CapCut / VN / InShot):</strong> {mobile_steps}<br>
-                    💻 <strong>Desktop Software (Premiere Pro / DaVinci Resolve / Final Cut):</strong> {desktop_steps}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # TIMELINE SECTION (PHASE 1)
+    # TIMELINE SECTION
     st.divider()
-    st.markdown("### ⏱️ Timestamped Editing Timeline & #1 Top-Viewed Tutorial Videos")
+    st.markdown("### ⏱️ Reference Video Edit Breakdown & #1 Top-Viewed Tutorial Videos")
     
     for item in report.timeline:
         query = getattr(item, 'tutorial_query', f"How to do {item.editing_type} video editing tutorial")
