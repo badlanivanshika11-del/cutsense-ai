@@ -46,7 +46,7 @@ def get_direct_top_viewed_tutorial_link(editing_type: str) -> dict:
     }
 
 def analyze_video_with_gemini(video_file_path: str = None, api_key: str = None, meta_dict: dict = None) -> VideoAnalysisReport:
-    """Uploads video payload to Gemini API or analyzes metadata if video file is restricted by Cloud 403."""
+    """Uploads video payload to Gemini API for 100% full-duration perfection covering intro, middle, and outro."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -64,20 +64,20 @@ def analyze_video_with_gemini(video_file_path: str = None, api_key: str = None, 
             contents_payload.append(uploaded_file)
             
     prompt = """
-    You are an unsparing, highly rigorous Master Video Editor and Retention Analyst.
-    Perform an EXHAUSTIVE, 100% HONEST breakdown of EVERY SINGLE editing technique in this video from 00:00 to the very end.
+    You are an unsparing, highly rigorous Senior Master Video Editor and Algorithm Specialist.
+    Perform a 100% COMPLETE, EXHAUSTIVE, SECOND-BY-SECOND breakdown covering the ENTIRE VIDEO DURATION from 00:00 all the way to the final second.
 
-    RULES FOR TIMELINE (MANDATORY):
-    - Do NOT summarize or limit the timeline. Identify ALL edit moments throughout the entire video.
-    - Aim for AT LEAST 15 to 25+ distinct timestamped edit items spanning the intro, body, transitions, and outro.
-    - Log every micro-cut, push-in zoom, whip-pan, sound effect (SFX) drop, text popup, lower third, B-roll insert, split screen, color grade shift, and speed ramp.
+    MANDATORY RULES FOR FULL VIDEO COVERAGE:
+    - You MUST cover EVERY SINGLE chapter of the video: Intro (0-25%), First Half (25-50%), Second Half (50-75%), and Outro (75-100%).
+    - Do NOT stop prematurely or summarize. Log AT LEAST 20 to 35+ timestamped editing segments across the full timeline.
+    - Identify every cut, transition, camera zoom, SFX sound drop, kinetic text popup, lower third, B-roll insert, color grade shift, split screen, and speed ramp.
     - Be completely honest, specific, and thorough about what technique was used and its exact retention impact.
 
     Provide:
     1. Virality Mechanics & Engagement: Detailed reasons why this video got high views, likes, and watch time.
     2. Comment Section Triggers: Specific debates, skits, or questions driving comments.
     3. Thumbnail & Title Synergy: CTR evaluation.
-    4. Exhaustive 15-25+ Segment Timeline: With techniques, retention impact, tutorial titles, and 3-step quick guides.
+    4. Full-Duration 20-35+ Segment Timeline: Covering Intro, Middle, and Outro with techniques, retention impact, tutorial titles, and 3-step quick guides.
     """
     
     if meta_dict:
