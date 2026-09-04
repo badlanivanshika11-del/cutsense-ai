@@ -10,9 +10,10 @@ sys.path.append(os.path.dirname(__file__))
 
 from downloader import download_video
 from analyzer import analyze_video_with_gemini
+from style_director import transfer_style_to_raw_video
 from report_generator import generate_pdf_report, generate_csv_report
 
-app = FastAPI(title="CutSense AI Custom API")
+app = FastAPI(title="CutSense AI Custom API - Phase 2")
 
 # Allow CORS for custom frontend
 app.add_middleware(
@@ -25,6 +26,11 @@ app.add_middleware(
 
 class AnalyzeRequest(BaseModel):
     url: str
+    api_key: str = None
+
+class StyleTransferRequest(BaseModel):
+    reference_urls: list[str]
+    raw_url: str
     api_key: str = None
 
 @app.post("/api/analyze")
@@ -44,6 +50,33 @@ async def analyze_endpoint(request: AnalyzeRequest):
         return {
             "metadata": metadata,
             "report": report.model_dump()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/style-transfer")
+async def style_transfer_endpoint(request: StyleTransferRequest):
+    """Phase 2 Endpoint: Transfers reference video style onto raw video clip."""
+    if not request.reference_urls or not request.raw_url:
+        raise HTTPException(status_code=400, detail="Reference URLs and Raw URL are required")
+        
+    api_key_to_use = request.api_key or os.environ.get("GEMINI_API_KEY")
+    if not api_key_to_use:
+        raise HTTPException(status_code=400, detail="Gemini API key is required")
+        
+    try:
+        ref_paths = []
+        for idx, rurl in enumerate(request.reference_urls):
+            rmeta = download_video(rurl, output_dir=f"downloads/ref{idx}")
+            ref_paths.append(rmeta["file_path"])
+            
+        raw_meta = download_video(request.raw_url, output_dir="downloads/raw")
+        
+        plan = transfer_style_to_raw_video(ref_paths, raw_meta["file_path"], api_key=api_key_to_use)
+        
+        return {
+            "raw_metadata": raw_meta,
+            "style_plan": plan.model_dump()
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
