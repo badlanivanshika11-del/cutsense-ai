@@ -14,10 +14,10 @@ except AttributeError:
 class EditingSegment(BaseModel):
     timestamp_start: str = Field(description="Start time, e.g., 00:05")
     timestamp_end: str = Field(description="End time, e.g., 00:08")
-    editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, Color Grade, Motion Graphic, etc.")
-    description: str = Field(description="Detailed explanation of what editing technique was used.")
-    engagement_impact: str = Field(description="Why this keeps the viewer engaged.")
-    tutorial_title: str = Field(description="Title of the top tutorial to learn this technique.")
+    editing_type: str = Field(description="Cut, Transition, Zoom, B-roll, Text Overlay, SFX Drop, Color Grade, Motion Graphic, Speed Ramp, Lower Third, etc.")
+    description: str = Field(description="Honest & detailed explanation of what exact editing technique was used.")
+    engagement_impact: str = Field(description="Psychological retention impact on the audience.")
+    tutorial_title: str = Field(description="Title of the best tutorial to learn this technique.")
     tutorial_youtube_url: str = Field(description="Direct YouTube link to the #1 top-viewed tutorial video for this edit.")
     quick_step_guide: str = Field(description="Brief 3-step guide on how to recreate this edit in Premiere Pro/CapCut.")
 
@@ -46,7 +46,7 @@ def get_direct_top_viewed_tutorial_link(editing_type: str) -> dict:
     }
 
 def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> VideoAnalysisReport:
-    """Uploads video to Gemini API for high-speed analysis and granular 10-15 point edit detection."""
+    """Uploads video to Gemini API for exhaustive, 100% honest 15-25+ point edit detection across the full timeline."""
     if api_key:
         client = genai.Client(api_key=api_key)
     else:
@@ -63,22 +63,24 @@ def analyze_video_with_gemini(video_file_path: str, api_key: str = None) -> Vide
         raise ValueError("Video processing failed on Gemini API.")
         
     prompt = """
-    You are an expert YouTube & Instagram Algorithm Specialist and Senior Master Video Editor.
-    Analyze this video thoroughly and rapidly:
+    You are an unsparing, highly rigorous Master Video Editor and Retention Analyst.
+    Perform an EXHAUSTIVE, 100% HONEST breakdown of EVERY SINGLE editing technique in this video from 00:00 to the very end.
 
-    CRITICAL INSTRUCTIONS FOR TIMELINE:
-    - Extract a COMPREHENSIVE, DETAILED timeline of AT LEAST 8 to 15 granular editing techniques across the video.
-    - Identify every major cut, transition (whip pan, zoom-in, hand-swipe, match cut), B-roll overlay, text popup, motion graphic animation, sound effect (SFX) drop, color grade shift, and speed ramp.
-    - Do NOT omit edit segments. Be thorough from the intro hook (00:00) all the way to the outro.
+    RULES FOR TIMELINE (MANDATORY):
+    - Do NOT summarize or limit the timeline. Identify ALL edit moments throughout the entire video.
+    - Aim for AT LEAST 15 to 25+ distinct timestamped edit items spanning the intro, body, transitions, and outro.
+    - Log every micro-cut, push-in zoom, whip-pan, sound effect (SFX) drop, text popup, lower third, B-roll insert, split screen, color grade shift, and speed ramp.
+    - Be completely honest, specific, and thorough about what technique was used and its exact retention impact.
 
     Provide:
-    1. Virality Mechanics & Engagement: Why this video got high views, likes, and watch time.
+    1. Virality Mechanics & Engagement: Detailed reasons why this video got high views, likes, and watch time.
     2. Comment Section Triggers: Specific debates, skits, or questions driving comments.
     3. Thumbnail & Title Synergy: CTR evaluation.
-    4. Detailed 8-15 Segment Timeline: With techniques, retention impact, tutorial titles, and 3-step quick guides.
+    4. Exhaustive 15-25+ Segment Timeline: With techniques, retention impact, tutorial titles, and 3-step quick guides.
     """
     
-    models_to_try = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash"]
+    # gemini-3.7-flash and gemini-3.6-flash excel at exhaustive multimodal reasoning
+    models_to_try = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
     last_error = None
     report = None
     
