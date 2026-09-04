@@ -126,7 +126,7 @@ with col_ref:
 
 with col_raw:
     st.markdown("#### 2. Your Raw Video / Short Clips (File Upload or Link)")
-    uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Upload your raw video clip", key="master_file")
+    uploaded_file = st.file_uploader("Upload Raw Video File (Up to 200 MB on Cloud / 1.0 GB on Local http://localhost:8501):", type=["mp4", "mov", "mkv", "avi"], help="Streamlit Cloud caps web uploads at 200MB. For 0.8 GB files, use your local app http://localhost:8501 or paste a video link!", key="master_file")
     raw_url_input = st.text_input("OR Paste Raw Video Link URL:", placeholder="https://www.youtube.com/watch?v=...", key="master_raw_url")
 
     # SAVE UPLOADED FILE PERSISTENTLY INTO SESSION STATE IMMEDIATELY
