@@ -142,7 +142,7 @@ with col_raw:
     
     raw_file_path_to_use = None
     if "Upload Video File" in raw_upload_method:
-        uploaded_file = st.file_uploader("Upload Raw Video File (Up to 0.15 GB / 150 MB):", type=["mp4", "mov", "mkv", "avi"], help="Supports raw video files up to 0.15 GB (150 MB)", key="master_file")
+        uploaded_file = st.file_uploader("Upload Raw Video File (Up to 1.0 GB / 1000 MB):", type=["mp4", "mov", "mkv", "avi"], help="Supports raw video files up to 1.0 GB (1000 MB)", key="master_file")
         if uploaded_file:
             os.makedirs("downloads/uploaded_raw", exist_ok=True)
             raw_file_path_to_use = os.path.join("downloads/uploaded_raw", uploaded_file.name)

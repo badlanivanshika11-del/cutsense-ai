@@ -8,7 +8,7 @@ except AttributeError:
     pass
 
 def download_video(url: str, output_dir: str = "downloads") -> dict:
-    """Downloads YouTube Videos, Shorts, and Instagram Reels with 4-level HTTP 403 bypass fallbacks."""
+    """Downloads YouTube Videos, Shorts, and Instagram Reels with 5-level HTTP 403 Forbidden bypass fallbacks."""
     os.makedirs(output_dir, exist_ok=True)
     is_instagram = "instagram.com" in url.lower() or "instagr.am" in url.lower()
     platform_name = "Instagram Reel" if is_instagram else "YouTube Video"
@@ -19,9 +19,9 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
-    # 4-Layer Fallback Strategy to bypass HTTP 403 Forbidden on Cloud IPs
+    # 5-Layer Anti-403 Forbidden Strategy for Cloud IP addresses
     options_list = [
-        # Layer 1: Android & iOS Mobile Client
+        # Layer 1: Mobile Web & Android VR Client
         {
             'format': 'bestvideo[height<=480]+bestaudio/best[height<=480]/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
@@ -31,12 +31,12 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'http_headers': headers,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'ios', 'web'],
+                    'player_client': ['mweb', 'android_vr', 'web'],
                 }
             },
             'quiet': True,
         },
-        # Layer 2: TV & Mweb Client (Bypasses HTTP 403 Forbidden)
+        # Layer 2: Embedded Web & TV Client (Bypasses Cloud 403 Restrictions)
         {
             'format': 'best[ext=mp4]/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
@@ -45,7 +45,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'geo_bypass': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['tv', 'mweb'],
+                    'player_client': ['web_embedded', 'tv_embedded', 'tv'],
                 }
             },
             'quiet': True,
@@ -64,7 +64,20 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             },
             'quiet': True,
         },
-        # Layer 4: Universal Catch-all
+        # Layer 4: Fallback without format constraint
+        {
+            'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
+            'overwrites': True,
+            'nocheckcertificate': True,
+            'geo_bypass': True,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android'],
+                }
+            },
+            'quiet': True,
+        },
+        # Layer 5: Universal Emergency Default
         {
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
@@ -96,7 +109,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             last_error = e
             continue
 
-    raise Exception(f"Unable to download video stream after 4 fallback attempts: {str(last_error)}")
+    raise Exception(f"Unable to download video stream after 5 fallback attempts: {str(last_error)}")
 
 # Alias for backwards compatibility
 download_youtube_video = download_video
