@@ -21,10 +21,10 @@ st.set_page_config(
     page_title="CutSense AI Studio - Phase 2 Edition",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# Cyberpunk Neon & Clean Styling
+# Styling Injection
 clean_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap');
@@ -92,22 +92,33 @@ st.markdown(clean_css, unsafe_allow_html=True)
 
 # App Header
 st.markdown('<div class="hero-title">⚡ CutSense AI Studio - Phase 2</div>', unsafe_allow_html=True)
-st.caption("AI Style Transfer • Reusable Video Templates • 1-Click Copy-Paste Editing Director & Software Advisor")
+st.caption("AI Style Transfer • Reusable Video Templates • Direct Raw Video Upload • Multi-Software Editing Advisor")
 
 # Sidebar Configuration
 with st.sidebar:
     st.markdown("### ⚙️ Studio Settings")
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     st.markdown("---")
+    st.markdown("### 🎬 Supported Software")
+    st.markdown("""
+    - 📱 **CapCut** (Mobile & PC)
+    - 📱 **VN Video Editor** (Mobile & Mac)
+    - 📱 **InShot** (Mobile Shorts/Reels)
+    - 💻 **DaVinci Resolve** (Free Pro)
+    - 💻 **Premiere Pro** (Pro Studio)
+    - 💻 **Final Cut Pro** (Mac)
+    - 💻 **After Effects** (Motion FX)
+    """)
+    st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
-# Main Page Tabs for Instant Phase 2 Access
-tab1, tab2 = st.tabs(["⚡ Phase 2: Copy-Paste AI Style Transfer & Editing Director", "🎯 Phase 1: Video Deconstruct & Virality Engine"])
+# Main Page Tabs
+tab1, tab2 = st.tabs(["⚡ Phase 2: Copy-Paste AI Style Transfer & Multi-Software Advisor", "🎯 Phase 1: Video Deconstruct & Virality Engine"])
 
-# TAB 1: PHASE 2 AI STYLE TRANSFER & COPY-PASTE EDIT DIRECTOR
+# TAB 1: PHASE 2 AI STYLE TRANSFER & MULTI-SOFTWARE ADVISOR
 with tab1:
-    st.subheader("⚡ Phase 2: Copy-Paste Video Style Transfer & AI Editing Director")
-    st.write("Upload reference video(s) showing an editing style you love, plus your own video clip. AI will generate a 100% copy-paste ready editing blueprint for your video!")
+    st.subheader("⚡ Phase 2: Copy-Paste Video Style Transfer & Multi-App Director")
+    st.write("Upload reference video(s) showing an editing style you love, plus your raw video clip (File Upload or URL). AI will generate a 100% copy-paste ready blueprint for all major editing apps!")
 
     col_ref, col_raw = st.columns(2)
     
@@ -120,17 +131,36 @@ with tab1:
         
     with col_raw:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### 📽️ Your Video Clip")
-        raw_url = st.text_input("Your Raw Video URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...", key="raw")
+        st.markdown("#### 📽️ Your Raw Video Clip (File Upload or URL)")
+        
+        raw_upload_method = st.radio("Choose Input Method for Your Raw Video:", ["📁 Upload File from Phone/PC", "🔗 Paste Video Link URL"], horizontal=True, key="raw_method")
+        
+        raw_file_path_to_use = None
+        
+        if "Upload File" in raw_upload_method:
+            uploaded_file = st.file_uploader("Choose Raw Video File (.mp4, .mov, .mkv, .avi):", type=["mp4", "mov", "mkv", "avi"], key="raw_file")
+            if uploaded_file:
+                os.makedirs("downloads/uploaded_raw", exist_ok=True)
+                raw_file_path_to_use = os.path.join("downloads/uploaded_raw", uploaded_file.name)
+                with open(raw_file_path_to_use, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                st.success(f"File uploaded: **{uploaded_file.name}** ({round(len(uploaded_file.getbuffer())/(1024*1024), 1)} MB)")
+        else:
+            raw_url = st.text_input("Your Raw Video URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...", key="raw_url_input")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     target_preset_option = st.selectbox(
-        "Choose Target Editing Preset & Software Style:",
+        "Choose Your Preferred Primary Editing App:",
         [
-            "Option A: CapCut Fast Viral Reel (Easiest & Fastest)",
-            "Option B: Premiere Pro Studio Professional (High Quality)",
-            "Option C: After Effects Motion Graphic Mastery (Complex Effects)"
+            "CapCut (Mobile / PC - Easiest & Fastest)",
+            "VN Video Editor (Mobile / Mac - Free & Clean)",
+            "InShot (Mobile - Quick Reels & Shorts)",
+            "DaVinci Resolve (PC / Mac - Free Professional Color & FX)",
+            "Premiere Pro (PC / Mac - Industry Standard Studio)",
+            "Final Cut Pro (Mac - Ultra Fast Pro Editing)",
+            "After Effects (PC / Mac - Advanced Motion Graphics & FX)"
         ]
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -138,8 +168,10 @@ with tab1:
     if st.button("⚡ Generate Copy-Paste Editing Blueprint", use_container_width=True, key="p2_btn"):
         api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
         
-        if not ref_url1 or not raw_url:
-            st.warning("Please enter at least Reference Video 1 URL and Your Raw Video URL.")
+        has_raw = raw_file_path_to_use or ("Paste Video Link" in raw_upload_method and raw_url)
+        
+        if not ref_url1 or not has_raw:
+            st.warning("Please provide at least Reference Video 1 URL and Your Raw Video (File or URL).")
         elif not api_key_to_use:
             st.error("Please enter your Gemini API Key in the sidebar or set GEMINI_API_KEY.")
         else:
@@ -151,22 +183,27 @@ with tab1:
                         ref_meta2 = download_video(ref_url2, output_dir="downloads/ref2")
                         ref_paths.append(ref_meta2["file_path"])
                         
-                with st.spinner("Step 2/3: Downloading your raw video clip..."):
-                    raw_meta = download_video(raw_url, output_dir="downloads/raw")
+                with st.spinner("Step 2/3: Processing your raw video clip..."):
+                    if not raw_file_path_to_use:
+                        raw_meta = download_video(raw_url, output_dir="downloads/raw")
+                        raw_file_path_to_use = raw_meta["file_path"]
+                        raw_title = raw_meta["title"]
+                    else:
+                        raw_title = os.path.basename(raw_file_path_to_use)
                     
                 with st.spinner("Step 3/3: Gemini AI is mapping reference editing DNA onto your video timeline..."):
-                    plan = transfer_style_to_raw_video(ref_paths, raw_meta["file_path"], api_key=api_key_to_use)
+                    plan = transfer_style_to_raw_video(ref_paths, raw_file_path_to_use, api_key=api_key_to_use)
                     st.session_state["style_plan"] = plan
-                    st.session_state["raw_meta"] = raw_meta
+                    st.session_state["raw_title"] = raw_title
 
             except Exception as e:
                 st.error(f"An error occurred during style transfer: {str(e)}")
 
-    if "style_plan" in st.session_state and "raw_meta" in st.session_state:
+    if "style_plan" in st.session_state and "raw_title" in st.session_state:
         plan = st.session_state["style_plan"]
-        raw_meta = st.session_state["raw_meta"]
+        raw_title = st.session_state["raw_title"]
         
-        st.success(f"Generated Copy-Paste Template for: **{raw_meta['title']}**")
+        st.success(f"Generated Copy-Paste Template for: **{raw_title}**")
         
         # Software & Vibe Recommendation Cards
         sc1, sc2, sc3 = st.columns(3)
@@ -176,8 +213,9 @@ with tab1:
             st.markdown('</div>', unsafe_allow_html=True)
         with sc2:
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown(f"**Editing Difficulty:** **{plan.difficulty_level}**", unsafe_allow_html=True)
-            st.markdown(f"**Style Name:** *{plan.template_name}*", unsafe_allow_html=True)
+            st.markdown(f"**Difficulty:** **{plan.difficulty_level}**", unsafe_allow_html=True)
+            alt_apps_str = ", ".join(getattr(plan, 'alternative_apps', ['VN Editor', 'DaVinci Resolve', 'InShot']))
+            st.markdown(f"**Alternative Apps:** *{alt_apps_str}*", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         with sc3:
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -192,10 +230,13 @@ with tab1:
         st.divider()
         st.markdown("### 📋 1:1 Copy-Paste Ready Timeline Script for Your Video")
         
-        for idx, item in enumerate(plan.step_by_timeline if hasattr(plan, 'step_by_timeline') else plan.step_by_step_timeline, 1):
+        for idx, item in enumerate(getattr(plan, 'step_by_step_timeline', getattr(plan, 'step_by_timeline', [])), 1):
+            mobile_steps = getattr(item, 'how_to_do_in_mobile_apps', getattr(item, 'how_to_do_in_capcut', 'Apply transition/text preset.'))
+            desktop_steps = getattr(item, 'how_to_do_in_desktop_apps', getattr(item, 'how_to_do_in_premiere', 'Apply keyframe effect.'))
+            
             st.markdown(f"""
             <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
                     <div>
                         <span style="font-family: monospace; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 8px; border-radius: 6px;">⏱️ Timestamp: {item.timestamp}</span>
                         &nbsp;&nbsp;
@@ -214,8 +255,8 @@ with tab1:
                     ✨ <strong>Transition Effect:</strong> <code>{item.transition_name}</code>
                 </div>
                 <div style="font-size: 0.85rem; color: #94a3b8; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px;">
-                    📱 <strong>CapCut Step:</strong> {item.how_to_do_in_capcut}<br>
-                    💻 <strong>Premiere Pro Step:</strong> {item.how_to_do_in_premiere}
+                    📱 <strong>Mobile Apps (CapCut / VN / InShot):</strong> {mobile_steps}<br>
+                    💻 <strong>Desktop Software (Premiere Pro / DaVinci Resolve / Final Cut):</strong> {desktop_steps}
                 </div>
             </div>
             """, unsafe_allow_html=True)
