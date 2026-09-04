@@ -21,7 +21,7 @@ st.set_page_config(
     page_title="CutSense AI Studio - Phase 2 Edition",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Cyberpunk Neon & Clean Styling
@@ -96,19 +96,16 @@ st.caption("AI Style Transfer • Reusable Video Templates • 1-Click Copy-Past
 
 # Sidebar Configuration
 with st.sidebar:
-    st.markdown("### ⚙️ Studio Navigation")
-    app_mode = st.radio(
-        "Select Mode:",
-        ["🎯 Mode 1: Deconstruct & Virality Engine", "⚡ Mode 2: AI Style Transfer & Copy-Paste Director"],
-        index=1
-    )
-    st.markdown("---")
+    st.markdown("### ⚙️ Studio Settings")
     user_api_key = st.text_input("Gemini API Key:", type="password", help="Enter your Gemini API key from https://aistudio.google.com/")
     st.markdown("---")
     st.caption("Crafted for Video Editors & Content Creators")
 
-# MODE 2: AI STYLE TRANSFER & COPY-PASTE EDIT DIRECTOR (PHASE 2)
-if app_mode == "⚡ Mode 2: AI Style Transfer & Copy-Paste Director":
+# Main Page Tabs for Instant Phase 2 Access
+tab1, tab2 = st.tabs(["⚡ Phase 2: Copy-Paste AI Style Transfer & Editing Director", "🎯 Phase 1: Video Deconstruct & Virality Engine"])
+
+# TAB 1: PHASE 2 AI STYLE TRANSFER & COPY-PASTE EDIT DIRECTOR
+with tab1:
     st.subheader("⚡ Phase 2: Copy-Paste Video Style Transfer & AI Editing Director")
     st.write("Upload reference video(s) showing an editing style you love, plus your own video clip. AI will generate a 100% copy-paste ready editing blueprint for your video!")
 
@@ -117,14 +114,14 @@ if app_mode == "⚡ Mode 2: AI Style Transfer & Copy-Paste Director":
     with col_ref:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### 🎬 Reference Video(s) (Editing Style DNA)")
-        ref_url1 = st.text_input("Reference Video 1 URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...")
-        ref_url2 = st.text_input("Reference Video 2 URL (Optional):", placeholder="https://www.instagram.com/reel/...")
+        ref_url1 = st.text_input("Reference Video 1 URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...", key="ref1")
+        ref_url2 = st.text_input("Reference Video 2 URL (Optional):", placeholder="https://www.instagram.com/reel/...", key="ref2")
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_raw:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### 📽️ Your Video Clip")
-        raw_url = st.text_input("Your Raw Video URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...")
+        raw_url = st.text_input("Your Raw Video URL (YouTube / Reel):", placeholder="https://www.youtube.com/watch?v=...", key="raw")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -138,7 +135,7 @@ if app_mode == "⚡ Mode 2: AI Style Transfer & Copy-Paste Director":
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("⚡ Generate Copy-Paste Editing Blueprint", use_container_width=True):
+    if st.button("⚡ Generate Copy-Paste Editing Blueprint", use_container_width=True, key="p2_btn"):
         api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
         
         if not ref_url1 or not raw_url:
@@ -223,12 +220,12 @@ if app_mode == "⚡ Mode 2: AI Style Transfer & Copy-Paste Director":
             </div>
             """, unsafe_allow_html=True)
 
-# MODE 1: DECONSTRUCT & VIRALITY ENGINE (PHASE 1)
-else:
-    st.subheader("🎯 Mode 1: Video Deconstruction & Virality Analytics")
-    video_url = st.text_input("YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...")
+# TAB 2: DECONSTRUCT & VIRALITY ENGINE (PHASE 1)
+with tab2:
+    st.subheader("🎯 Phase 1: Video Deconstruction & Virality Analytics")
+    video_url = st.text_input("YouTube Video or Instagram Reel URL:", placeholder="Paste YouTube link or https://www.instagram.com/reel/...", key="p1_url")
 
-    if st.button("🚀 Deconstruct Edits & Virality", use_container_width=True):
+    if st.button("🚀 Deconstruct Edits & Virality", use_container_width=True, key="p1_btn"):
         api_key_to_use = user_api_key or os.environ.get("GEMINI_API_KEY")
         
         if not video_url:
@@ -272,9 +269,9 @@ else:
             
             d_col1, d_col2 = st.columns(2)
             with d_col1:
-                st.download_button("📄 PDF Report", data=pdf_bytes, file_name=f"CutSense_{platform_label.replace(' ', '_')}.pdf", mime="application/pdf", use_container_width=True)
+                st.download_button("📄 PDF Report", data=pdf_bytes, file_name=f"CutSense_{platform_label.replace(' ', '_')}.pdf", mime="application/pdf", use_container_width=True, key="p1_pdf")
             with d_col2:
-                st.download_button("📊 CSV Data", data=csv_str, file_name=f"CutSense_{platform_label.replace(' ', '_')}.csv", mime="text/csv", use_container_width=True)
+                st.download_button("📊 CSV Data", data=csv_str, file_name=f"CutSense_{platform_label.replace(' ', '_')}.csv", mime="text/csv", use_container_width=True, key="p1_csv")
             st.markdown('</div>', unsafe_allow_html=True)
             
         with col2:
