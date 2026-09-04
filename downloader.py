@@ -8,7 +8,7 @@ except AttributeError:
     pass
 
 def download_video(url: str, output_dir: str = "downloads") -> dict:
-    """Downloads a YouTube video, Short, or Instagram Reel with wildcard format matching."""
+    """Downloads lightweight 360p video stream for ultra-fast download and AI analysis speed."""
     os.makedirs(output_dir, exist_ok=True)
     is_instagram = "instagram.com" in url.lower() or "instagr.am" in url.lower()
     platform_name = "Instagram Reel" if is_instagram else "YouTube Video"
@@ -19,10 +19,10 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
-    # Format strategies with wildcards so no requested format error occurs
+    # Fast 360p stream selector for ultra-fast download & AI upload
     options_list = [
         {
-            'format': 'bestvideo*+bestaudio*/best',
+            'format': 'b[height<=360]/best[height<=480]/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
@@ -36,21 +36,11 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             'quiet': True,
         },
         {
+            'format': 'b/best',
             'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
             'overwrites': True,
             'nocheckcertificate': True,
             'geo_bypass': True,
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['tv', 'ios'],
-                }
-            },
-            'quiet': True,
-        },
-        {
-            'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s'),
-            'overwrites': True,
-            'nocheckcertificate': True,
             'quiet': True,
         }
     ]
@@ -78,7 +68,7 @@ def download_video(url: str, output_dir: str = "downloads") -> dict:
             last_error = e
             continue
 
-    raise Exception(f"Unable to download video stream after 3 attempts: {str(last_error)}")
+    raise Exception(f"Unable to download video stream after fallback attempts: {str(last_error)}")
 
 # Alias for backwards compatibility
 download_youtube_video = download_video
